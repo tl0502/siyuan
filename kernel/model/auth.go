@@ -32,7 +32,11 @@ type Account struct {
 	Token    string
 }
 type AccountsMap map[string]*Account // username -> account
-type SessionsMap map[string]string   // sessionID -> username
+type PublishSession struct {
+	Username string
+	Token    string
+}
+type SessionsMap map[string]*PublishSession // sessionID -> publish session
 type ClaimsKeyType string
 
 const (
@@ -62,7 +66,17 @@ func GetBasicAuthAccount(username string) *Account {
 }
 
 func GetBasicAuthUsernameBySessionID(sessionID string) string {
-	return sessionsMap[sessionID]
+	if session := sessionsMap[sessionID]; session != nil {
+		return session.Username
+	}
+	return ""
+}
+
+func GetPublishSessionToken(sessionID string) string {
+	if session := sessionsMap[sessionID]; session != nil {
+		return session.Token
+	}
+	return ""
 }
 
 func GetNewSessionID() string {
@@ -73,7 +87,17 @@ func GetNewSessionID() string {
 func AddSession(sessionID, username string) {
 	sessionLock.Lock()
 	defer sessionLock.Unlock()
-	sessionsMap[sessionID] = username
+	token := ""
+	if account := GetBasicAuthAccount(username); account != nil {
+		token = account.Token
+	}
+	sessionsMap[sessionID] = &PublishSession{Username: username, Token: token}
+}
+
+func AddPublishVisitorSession(sessionID, username, token string) {
+	sessionLock.Lock()
+	defer sessionLock.Unlock()
+	sessionsMap[sessionID] = &PublishSession{Username: username, Token: token}
 }
 
 func DeleteSession(sessionID string) {
@@ -103,25 +127,29 @@ func InitJWT() {
 	}
 
 	for username, account := range accountsMap {
-		// REF: https://golang-jwt.github.io/jwt/usage/create/
-		t := jwt.NewWithClaims(
-			jwt.SigningMethodHS256,
-			jwt.MapClaims{
-				"iss": iss,
-				"sub": sub,
-				"aud": aud,
-				"jti": username,
-
-				ClaimsKeyRole: RoleReader,
-			},
-		)
-		if token, err := t.SignedString(jwtKey); err != nil {
+		if token, err := NewPublishReaderToken(username); err != nil {
 			logging.LogErrorf("JWT signature failed: %s", err)
 			return
 		} else {
 			account.Token = token
 		}
 	}
+}
+
+func NewPublishReaderToken(username string) (string, error) {
+	// REF: https://golang-jwt.github.io/jwt/usage/create/
+	t := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"iss": iss,
+			"sub": sub,
+			"aud": aud,
+			"jti": username,
+
+			ClaimsKeyRole: RoleReader,
+		},
+	)
+	return t.SignedString(jwtKey)
 }
 
 func ParseJWT(tokenString string) (*jwt.Token, error) {

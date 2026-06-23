@@ -109,10 +109,15 @@ func startPublishReverseProxyService() {
 	logging.LogInfof("publish service [%s:%s] is running", Host, Port)
 
 	server = &http.Server{
-		Handler: &httputil.ReverseProxy{
-			Rewrite:   rewrite,
-			Transport: transport,
-		},
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if handlePublishAuth(w, r) {
+				return
+			}
+			(&httputil.ReverseProxy{
+				Rewrite:   rewrite,
+				Transport: transport,
+			}).ServeHTTP(w, r)
+		}),
 	}
 
 	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -133,30 +138,37 @@ func (PublishServiceTransport) RoundTrip(request *http.Request) (response *http.
 		// Session Auth
 		sessionIdCookie, cookieErr := request.Cookie(model.SessionIdCookieName)
 		if cookieErr == nil {
-			// Check session ID
 			sessionID := sessionIdCookie.Value
-			if username := model.GetBasicAuthUsernameBySessionID(sessionID); username != "" {
-				// Valid session
-				if account := model.GetBasicAuthAccount(username); account != nil {
-					// Valid account
-					request.Header.Set(model.XAuthTokenKey, account.Token)
-					response, err = http.DefaultTransport.RoundTrip(request)
-					return
-				}
-
-				// Invalid account, remove session
-				model.DeleteSession(sessionID)
+			if token := model.GetPublishSessionToken(sessionID); token != "" {
+				request.Header.Set(model.XAuthTokenKey, token)
+				response, err = http.DefaultTransport.RoundTrip(request)
+				return
 			}
+			model.DeleteSession(sessionID)
 		}
 
 		// Basic Auth
 		username, password, ok := request.BasicAuth()
 		account := model.GetBasicAuthAccount(username)
-		if !ok ||
-			account == nil ||
+		if !ok {
+			return &http.Response{
+				StatusCode: http.StatusFound,
+				Status:     http.StatusText(http.StatusFound),
+				Proto:      request.Proto,
+				ProtoMajor: request.ProtoMajor,
+				ProtoMinor: request.ProtoMinor,
+				Request:    request,
+				Header: http.Header{
+					"Location": {"/publish/auth"},
+				},
+				Body:          http.NoBody,
+				Close:         false,
+				ContentLength: -1,
+			}, nil
+		}
+		if account == nil ||
 			account.Username == "" || // 匿名用户
 			account.Password != password {
-
 			return &http.Response{
 				StatusCode: http.StatusUnauthorized,
 				Status:     http.StatusText(http.StatusUnauthorized),
