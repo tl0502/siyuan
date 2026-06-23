@@ -3,18 +3,11 @@ import {Tab} from "../Tab";
 import {setPanelFocus} from "../util";
 import {getDockByType} from "../tabUtil";
 /// #endif
-import {fetchPost, fetchSyncPost} from "../../util/fetch";
 import {updateHotkeyAfterTip} from "../../protyle/util/compatibility";
 import {Model} from "../Model";
-import {needSubscribe} from "../../util/needSubscribe";
 import {MenuItem} from "../../menus/Menu";
-import {confirmDialog} from "../../dialog/confirmDialog";
-import {replaceFileName} from "../../editor/rename";
-import {getDisplayName, movePathTo, pathPosix} from "../../util/pathName";
 import {App} from "../../index";
-import {getCloudURL} from "../../config/util/about";
 import {hasClosestByClassName} from "../../protyle/util/hasClosest";
-import {escapeHtml} from "../../util/escape";
 import {emitOpenMenu} from "../../plugin/EventBus";
 
 export class Inbox extends Model {
@@ -235,63 +228,11 @@ ${data.shorthandContent}
             label: window.siyuan.languages.refresh,
             icon: "iconRefresh",
             click: () => {
-                if (itemElement) {
-                    fetchPost("/api/inbox/getShorthand", {
-                        id: itemElement.dataset.id
-                    }, (response) => {
-                        this.data[response.data.oId] = response.data;
-                        itemElement.outerHTML = this.genItemHTML(response.data);
-                    });
-                } else if (detailsElement.classList.contains("fn__none")) {
-                    this.currentPage = 1;
-                    this.update();
-                } else {
-                    fetchPost("/api/inbox/getShorthand", {
-                        id: detailsElement.getAttribute("data-id")
-                    }, (response) => {
-                        this.data[response.data.oId] = response.data;
-                        detailsElement.innerHTML = this.genDetail(response.data);
-                        detailsElement.scrollTop = 0;
-                    });
-                }
+                this.currentPage = 1;
+                this.update();
             }
         }).element);
-        let ids: string[] = [];
-        if (itemElement) {
-            ids = [itemElement.dataset.id];
-        } else if (detailsElement.classList.contains("fn__none")) {
-            ids = this.selectIds;
-        } else {
-            ids = [detailsElement.getAttribute("data-id")];
-        }
-        if (ids.length > 0) {
-            window.siyuan.menus.menu.append(new MenuItem({
-                label: window.siyuan.languages.move,
-                icon: "iconMove",
-                click: () => {
-                    this.move(ids);
-                }
-            }).element);
-            window.siyuan.menus.menu.append(new MenuItem({
-                label: window.siyuan.languages.remove,
-                icon: "iconTrashcan",
-                click: () => {
-                    let removeTitle = "";
-                    ids.forEach((id, index) => {
-                        removeTitle += '<code class="fn__code">' + escapeHtml(this.data[id].shorthandTitle) + "</code>" + (index === ids.length - 1 ? "" : ", ");
-                    });
-                    confirmDialog(window.siyuan.languages.deleteOpConfirm, `${window.siyuan.languages.confirmDelete} ${removeTitle}?`, () => {
-                        if (itemElement) {
-                            this.remove([itemElement.dataset.id]);
-                        } else if (detailsElement.classList.contains("fn__none")) {
-                            this.remove();
-                        } else {
-                            this.remove([detailsElement.getAttribute("data-id")]);
-                        }
-                    }, undefined, true);
-                }
-            }).element);
-        }
+        const ids: string[] = [];
         if (this.app.plugins) {
             emitOpenMenu({
                 plugins: this.app.plugins,
@@ -306,104 +247,13 @@ ${data.shorthandContent}
         window.siyuan.menus.menu.popup({x: event.clientX, y: event.clientY + 16});
     }
 
-    private remove(removeIds?: string[]) {
-        if (!removeIds) {
-            removeIds = this.selectIds;
-        }
-        fetchPost("/api/inbox/removeShorthands", {ids: removeIds}, () => {
-            if (removeIds) {
-                this.back();
-                for (let i = this.selectIds.length - 1; i >= 0; i--) {
-                    if (removeIds.includes(this.selectIds[i])) {
-                        this.selectIds.splice(i, 1);
-                    }
-                }
-            } else {
-                this.selectIds = [];
-            }
-            this.currentPage = 1;
-            this.update();
-        });
-    }
-
-    private move(ids: string[]) {
-        movePathTo({
-            cb: async (toPath, toNotebook) => {
-                for (let i = 0; i < ids.length; i++) {
-                    const idItem = ids[i];
-                    const response = await fetchSyncPost("/api/inbox/getShorthand", {
-                        id: idItem
-                    });
-                    this.data[response.data.oId] = response.data;
-                    let md = response.data.shorthandMd;
-                    if ("" === md && "" === response.data.shorthandContent && "" != response.data.shorthandURL) {
-                        md = "[" + response.data.shorthandTitle + "](" + response.data.shorthandURL + ")";
-                    }
-                    await fetchSyncPost("/api/filetree/createDoc", {
-                        notebook: toNotebook[0],
-                        path: pathPosix().join(getDisplayName(toPath[0], false, true), Lute.NewNodeID() + ".sy"),
-                        title: replaceFileName(response.data.shorthandTitle),
-                        md,
-                        listDocTree: true,
-                    });
-                }
-                this.remove(ids);
-            },
-            flashcard: false
-        });
-    }
-
     private update() {
         const loadingElement = this.element.querySelector(".fn__loading");
-        if (needSubscribe("")) {
-            this.element.lastElementChild.innerHTML = `<ul class="b3-list b3-list--background">
+        this.element.lastElementChild.innerHTML = `<ul class="b3-list b3-list--background">
     <li class="b3-list--empty">
         ${window.siyuan.languages.inboxTip}
     </li>
-    <li class="b3-list--empty">
-        ${window.siyuan.config.system.container === "ios" ? window.siyuan.languages._kernel[122] : window.siyuan.languages._kernel[29].replaceAll("${accountServer}", getCloudURL(""))}
-    </li>
 </ul>`;
-            loadingElement.classList.add("fn__none");
-            return;
-        }
-        if (!loadingElement.classList.contains("fn__none")) {
-            return;
-        }
-        loadingElement.classList.remove("fn__none");
-        fetchPost("/api/inbox/getShorthands", {page: this.currentPage}, (response) => {
-            loadingElement.classList.add("fn__none");
-            let html = "";
-            if (response.data.data.shorthands.length === 0) {
-                html = `<ul class="b3-list b3-list--background"><li class="b3-list--empty">${window.siyuan.languages.inboxTip}</li></ul>`;
-            } else {
-                html = '<ul style="padding: 8px 0" class="b3-list b3-list--background">';
-                response.data.data.shorthands.forEach((item: IInbox) => {
-                    html += this.genItemHTML(item);
-                    this.data[item.oId] = item;
-                });
-                html += "</ul>";
-            }
-            this.element.lastElementChild.innerHTML = html;
-
-            this.pageCount = response.data.data.pagination.paginationRecordCount;
-            this.element.querySelector(".inboxSelectCount").innerHTML = `${this.selectIds.length}/${this.pageCount}`;
-
-            const previousElement = this.element.querySelector('[data-type="previous"]');
-            const nextElement = this.element.querySelector('[data-type="next"]');
-            if (response.data.data.pagination.paginationPageCount > this.currentPage) {
-                nextElement.removeAttribute("disabled");
-            } else {
-                nextElement.setAttribute("disabled", "disabled");
-            }
-            if (this.currentPage === 1) {
-                previousElement.setAttribute("disabled", "disabled");
-            } else {
-                previousElement.removeAttribute("disabled");
-            }
-            const selectCount = this.element.lastElementChild.querySelectorAll(".b3-list-item").length;
-            this.element.firstElementChild.querySelector('[data-type="selectall"] use').setAttribute("xlink:href", (this.element.lastElementChild.querySelectorAll('[*|href="#iconCheck"]').length === selectCount && selectCount !== 0) ? "#iconCheck" : "#iconUncheck");
-            this.element.lastElementChild.scrollTop = 0;
-        });
+        loadingElement.classList.add("fn__none");
     }
 }
