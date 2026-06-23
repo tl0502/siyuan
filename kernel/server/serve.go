@@ -557,7 +557,7 @@ func serveAuthPage(c *gin.Context) {
 		"l3":                     model.Conf.Language(175),
 		"l4":                     model.Conf.Language(176),
 		"l5":                     model.Conf.Language(177),
-		"l6":                     model.Conf.Language(178),
+		"l6":                     "TNOTE",
 		"l7":                     template.HTML(model.Conf.Language(184)),
 		"l8":                     model.Conf.Language(95),
 		"l9":                     model.Conf.Language(83),
@@ -1032,7 +1032,7 @@ func jwtMiddleware(c *gin.Context) {
 }
 
 func serveFixedStaticFiles(ginServer *gin.Engine) {
-	ginServer.StaticFile("favicon.ico", filepath.Join(util.WorkingDir, "stage", "icon.png"))
+	ginServer.StaticFile("favicon.ico", filepath.Join(util.WorkingDir, "stage", "favicon.ico"))
 
 	ginServer.StaticFile("manifest.json", filepath.Join(util.WorkingDir, "stage", "manifest.webmanifest"))
 	ginServer.StaticFile("manifest.webmanifest", filepath.Join(util.WorkingDir, "stage", "manifest.webmanifest"))

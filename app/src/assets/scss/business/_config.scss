@@ -245,6 +245,129 @@
     }
   }
 
+  &-publish-audit {
+    &__header {
+      align-items: center;
+      gap: 8px;
+    }
+
+    &__title {
+      color: var(--b3-theme-on-background);
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    &__summary {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    &__list {
+      gap: 0;
+    }
+
+    &__user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--b3-border-color);
+      box-sizing: border-box;
+
+      &:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+    }
+
+    &__identity {
+      display: flex;
+      align-items: center;
+      min-width: 180px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    &__avatar {
+      width: 26px;
+      height: 26px;
+      margin-right: 8px;
+      border-radius: var(--b3-border-radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--b3-theme-on-surface);
+      background-color: var(--b3-list-hover);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    &__profile {
+      min-width: 0;
+    }
+
+    &__name {
+      color: var(--b3-theme-on-background);
+      font-weight: 500;
+      line-height: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__status {
+      flex-shrink: 0;
+    }
+
+    &__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    &__button {
+      min-height: 28px;
+    }
+
+    &__empty {
+      padding: 4px 0 0;
+    }
+
+    &__empty-text {
+      margin-bottom: 4px;
+      color: var(--b3-theme-on-background);
+      font-weight: 500;
+    }
+
+    @media (max-width: 720px) {
+      &__header,
+      &__user {
+        flex-wrap: wrap;
+      }
+
+      &__summary {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      &__identity,
+      &__actions {
+        width: 100%;
+      }
+
+      &__actions {
+        justify-content: flex-start;
+      }
+    }
+  }
+
   &-bazaar {
     &__panel {
       height: 100%;

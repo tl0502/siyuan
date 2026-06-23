@@ -1,0 +1,87 @@
+<h2>发布站点访问端：登录 / 注册页方向</h2>
+<p class="subtitle">请先选结构和气质。后续实现会沿用思源现有组件，不做营销页。</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="margin:0">
+        <div class="mockup-header">A. 文档优先</div>
+        <div class="mockup-body" style="display:grid;grid-template-columns:1.2fr .8fr;gap:16px;min-height:240px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="label">Protected Knowledge Base</div>
+            <div style="height:22px;width:72%;background:#222;border-radius:4px"></div>
+            <div style="height:10px;width:88%;background:#d7d7d7;border-radius:4px"></div>
+            <div style="height:10px;width:80%;background:#d7d7d7;border-radius:4px"></div>
+            <div class="placeholder" style="height:120px">文档预览 / 站点说明</div>
+          </div>
+          <div style="border:1px solid #d8d8d8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="height:18px;width:50%;background:#222;border-radius:4px"></div>
+            <input class="mock-input" placeholder="用户名">
+            <input class="mock-input" placeholder="密码">
+            <button class="mock-button">登录</button>
+            <div style="height:10px;width:72%;background:#d7d7d7;border-radius:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>文档优先</h3>
+      <p>左侧保留站点/文档上下文，右侧登录注册。适合把发布站点当知识库入口。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="margin:0">
+        <div class="mockup-header">B. 紧凑对话框</div>
+        <div class="mockup-body" style="min-height:240px;display:flex;align-items:center;justify-content:center">
+          <div style="width:280px;border:1px solid #d8d8d8;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="height:22px;width:60%;background:#222;border-radius:4px"></div>
+            <div style="height:10px;width:86%;background:#d7d7d7;border-radius:4px"></div>
+            <div style="display:flex;border:1px solid #ccc;border-radius:6px;overflow:hidden">
+              <div style="flex:1;text-align:center;padding:8px;background:#222;color:white">登录</div>
+              <div style="flex:1;text-align:center;padding:8px;background:#f4f4f4">注册</div>
+            </div>
+            <input class="mock-input" placeholder="用户名">
+            <input class="mock-input" placeholder="密码">
+            <button class="mock-button">继续</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>紧凑对话框</h3>
+      <p>最小干扰，和现有 Basic Auth 更接近。适合“只是门禁，不强调品牌”。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="margin:0">
+        <div class="mockup-header">C. 管理提示型</div>
+        <div class="mockup-body" style="display:grid;grid-template-columns:.9fr 1.1fr;gap:16px;min-height:240px">
+          <div style="border:1px solid #d8d8d8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="height:20px;width:58%;background:#222;border-radius:4px"></div>
+            <div style="height:10px;width:94%;background:#d7d7d7;border-radius:4px"></div>
+            <div style="height:10px;width:82%;background:#d7d7d7;border-radius:4px"></div>
+            <div class="placeholder" style="height:112px">审核状态 / 说明</div>
+          </div>
+          <div style="border:1px solid #d8d8d8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:8px">
+              <button class="mock-button" style="flex:1">登录</button>
+              <button class="mock-button" style="flex:1;background:#777">申请注册</button>
+            </div>
+            <input class="mock-input" placeholder="用户名">
+            <input class="mock-input" placeholder="密码">
+            <input class="mock-input" placeholder="昵称 / 备注">
+            <button class="mock-button">提交申请</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>管理提示型</h3>
+      <p>突出“注册需审核”和申请状态。适合访问者经常需要自助申请的站点。</p>
+    </div>
+  </div>
+</div>

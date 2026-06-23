@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/siyuan-note/siyuan/kernel/conf"
 	"github.com/siyuan-note/siyuan/kernel/model"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
@@ -88,5 +89,51 @@ func TestHandlePublishLoginCreatesSessionForApprovedUser(t *testing.T) {
 	}
 	if token := model.GetPublishSessionToken(cookies[0].Value); token == "" {
 		t.Fatal("session token was empty")
+	}
+}
+
+func TestHandlePublishLoginCreatesSessionForBasicAuthAccount(t *testing.T) {
+	withPublishAuthTempDataDir(t)
+
+	originalConf := model.Conf
+	model.Conf = model.NewAppConf()
+	model.Conf.Publish = conf.NewPublish()
+	model.Conf.Publish.Auth.Accounts = []*conf.BasicAuthAccount{{
+		Username: "basic",
+		Password: "secret-123",
+		Memo:     "Legacy account",
+	}}
+	model.InitAccounts()
+	t.Cleanup(func() {
+		model.Conf = model.NewAppConf()
+		model.Conf.Publish = conf.NewPublish()
+		model.InitAccounts()
+		model.Conf = originalConf
+	})
+
+	request := httptest.NewRequest(http.MethodPost, "/publish/auth/login", strings.NewReader(`{"username":"basic","password":"secret-123"}`))
+	response := httptest.NewRecorder()
+
+	if !handlePublishAuth(response, request) {
+		t.Fatal("handlePublishAuth returned false")
+	}
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200, body %s", response.Code, response.Body.String())
+	}
+	cookies := response.Result().Cookies()
+	if len(cookies) != 1 || cookies[0].Name != model.SessionIdCookieName {
+		t.Fatalf("unexpected cookies: %+v", cookies)
+	}
+	if token := model.GetPublishSessionToken(cookies[0].Value); token == "" {
+		t.Fatal("session token was empty")
+	}
+}
+
+func TestPublishLoginPageCanHideInactiveForm(t *testing.T) {
+	if !strings.Contains(publishLoginHTML, "[hidden] { display: none !important; }") {
+		t.Fatal("publish login page does not force hidden forms to stay hidden")
+	}
+	if !strings.Contains(publishLoginHTML, `id="registerForm" class="auth-form" hidden`) {
+		t.Fatal("register form is not initially hidden")
 	}
 }

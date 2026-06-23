@@ -42,18 +42,31 @@ func handlePublishLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := model.AuthenticatePublishUser(input.Username, input.Password)
-	if err != nil {
-		writePublishAuthJSON(w, http.StatusUnauthorized, -1, model.ErrPublishUserAuthFailed.Error(), nil)
+	if err == nil {
+		token, err := model.NewPublishReaderToken(user.Username)
+		if err != nil {
+			writePublishAuthJSON(w, http.StatusInternalServerError, -1, err.Error(), nil)
+			return
+		}
+		setPublishAuthSessionCookie(w, user.Username, token)
+		writePublishAuthJSON(w, http.StatusOK, 0, "", map[string]any{"username": user.Username})
 		return
 	}
 
-	token, err := model.NewPublishReaderToken(user.Username)
-	if err != nil {
-		writePublishAuthJSON(w, http.StatusInternalServerError, -1, err.Error(), nil)
+	account := model.GetBasicAuthAccount(input.Username)
+	if account == nil ||
+		account.Username == "" || // 匿名用户不允许通过登录页登录
+		account.Password != input.Password {
+		writePublishAuthJSON(w, http.StatusUnauthorized, -1, model.ErrPublishUserAuthFailed.Error(), nil)
 		return
 	}
+	setPublishAuthSessionCookie(w, account.Username, account.Token)
+	writePublishAuthJSON(w, http.StatusOK, 0, "", map[string]any{"username": account.Username})
+}
+
+func setPublishAuthSessionCookie(w http.ResponseWriter, username, token string) {
 	sessionID := model.GetNewSessionID()
-	model.AddPublishVisitorSession(sessionID, user.Username, token)
+	model.AddPublishVisitorSession(sessionID, username, token)
 	http.SetCookie(w, &http.Cookie{
 		Name:     model.SessionIdCookieName,
 		Value:    sessionID,
@@ -61,7 +74,6 @@ func handlePublishLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   util.SSL,
 	})
-	writePublishAuthJSON(w, http.StatusOK, 0, "", map[string]any{"username": user.Username})
 }
 
 func handlePublishRegister(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +144,7 @@ const publishLoginHTML = `<!doctype html>
 <title>Publish Login</title>
 <style>
 :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+[hidden] { display: none !important; }
 body { margin: 0; min-height: 100vh; background: Canvas; color: CanvasText; }
 main { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 440px); }
 .context { padding: clamp(32px, 7vw, 88px); display: flex; flex-direction: column; justify-content: center; border-right: 1px solid color-mix(in srgb, CanvasText 16%, transparent); }
@@ -140,10 +153,10 @@ main { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr)
 .panel-wrap { display: flex; align-items: center; justify-content: center; padding: 24px; }
 .panel { width: min(100%, 360px); }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-button { height: 36px; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); background: Canvas; color: CanvasText; border-radius: 6px; cursor: pointer; }
-button.active, form button { background: CanvasText; color: Canvas; }
-form { display: flex; flex-direction: column; gap: 12px; }
-input { height: 36px; box-sizing: border-box; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 6px; background: Canvas; color: CanvasText; padding: 0 10px; font: inherit; }
+.tabs button, .auth-form button { height: 36px; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); background: Canvas; color: CanvasText; border-radius: 6px; cursor: pointer; font: inherit; }
+.tabs button.active, .auth-form button { background: CanvasText; color: Canvas; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form input { height: 36px; box-sizing: border-box; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 6px; background: Canvas; color: CanvasText; padding: 0 10px; font: inherit; }
 #message { min-height: 22px; color: color-mix(in srgb, CanvasText 76%, transparent); line-height: 1.5; }
 @media (max-width: 760px) {
   main { grid-template-columns: 1fr; }
@@ -161,15 +174,15 @@ input { height: 36px; box-sizing: border-box; border: 1px solid color-mix(in srg
 <section class="panel-wrap">
 <div class="panel">
 <div class="tabs">
-<button id="loginTab" class="active" type="button">登录</button>
-<button id="registerTab" type="button">注册</button>
+<button id="loginTab" class="active" type="button" aria-pressed="true">登录</button>
+<button id="registerTab" type="button" aria-pressed="false">注册</button>
 </div>
-<form id="loginForm">
+<form id="loginForm" class="auth-form">
 <input name="username" placeholder="用户名" autocomplete="username" required>
 <input name="password" placeholder="密码" type="password" autocomplete="current-password" required>
 <button type="submit">登录</button>
 </form>
-<form id="registerForm" hidden>
+<form id="registerForm" class="auth-form" hidden>
 <input name="username" placeholder="用户名" autocomplete="username" required>
 <input name="password" placeholder="密码" type="password" autocomplete="new-password" required>
 <input name="confirmPassword" placeholder="确认密码" type="password" autocomplete="new-password" required>
@@ -186,8 +199,18 @@ const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
 const loginTab = document.getElementById("loginTab");
 const registerTab = document.getElementById("registerTab");
-loginTab.onclick = () => { loginForm.hidden = false; registerForm.hidden = true; loginTab.classList.add("active"); registerTab.classList.remove("active"); message.textContent = ""; };
-registerTab.onclick = () => { loginForm.hidden = true; registerForm.hidden = false; registerTab.classList.add("active"); loginTab.classList.remove("active"); message.textContent = ""; };
+function switchMode(mode) {
+  const loginMode = mode === "login";
+  loginForm.hidden = !loginMode;
+  registerForm.hidden = loginMode;
+  loginTab.classList.toggle("active", loginMode);
+  registerTab.classList.toggle("active", !loginMode);
+  loginTab.setAttribute("aria-pressed", String(loginMode));
+  registerTab.setAttribute("aria-pressed", String(!loginMode));
+  message.textContent = "";
+}
+loginTab.addEventListener("click", () => switchMode("login"));
+registerTab.addEventListener("click", () => switchMode("register"));
 async function postJSON(url, data) {
   const response = await fetch(url, { method: "POST", body: JSON.stringify(data) });
   return response.json();

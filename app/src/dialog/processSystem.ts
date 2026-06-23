@@ -25,6 +25,8 @@ import {saveScroll} from "../protyle/scroll/saveScroll";
 import {isInAndroid, isInHarmony, isInIOS, setStorageVal} from "../protyle/util/compatibility";
 import {Plugin} from "../plugin";
 
+const APP_TITLE_NAME = "TNOTE";
+
 const updateTitle = (rootID: string, tab: Tab, protyle?: IProtyle) => {
     fetchPost("/api/block/getDocInfo", {
         id: rootID
@@ -522,7 +524,7 @@ export const setTitle = (title: string, showVersionTitle = false) => {
     const dragElement = document.getElementById("drag");
     const workspaceName = getWorkspaceName();
     if (showVersionTitle) {
-        const versionTitle = `${workspaceName} - ${window.siyuan.languages.siyuanNote} v${Constants.SIYUAN_VERSION}`;
+        const versionTitle = `${workspaceName} - ${APP_TITLE_NAME} v${Constants.SIYUAN_VERSION}`;
         document.title = versionTitle;
         if (dragElement) {
             dragElement.textContent = versionTitle;
@@ -530,7 +532,7 @@ export const setTitle = (title: string, showVersionTitle = false) => {
         }
     } else {
         title = title.trim() || window.siyuan.languages["_kernel"][16];
-        document.title = `${title} - ${workspaceName} - ${window.siyuan.languages.siyuanNote} v${Constants.SIYUAN_VERSION}`;
+        document.title = `${title} - ${workspaceName} - ${APP_TITLE_NAME} v${Constants.SIYUAN_VERSION}`;
         if (!dragElement) {
             return;
         }

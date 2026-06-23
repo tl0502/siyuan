@@ -96,7 +96,7 @@ export const initConfigSearch = (element: HTMLElement, app: App) => {
         // 发布
         getLang(["publishService", "publishServiceTip", "publishServicePort", "publishServicePortTip",
             "publishServiceAddresses", "publishServiceAddressesTip", "publishServiceAuth", "publishServiceAuthTip",
-            "publishServiceAuthAccounts", "publishServiceAuthAccountsTip"]),
+            "publishServiceAuthAccounts", "publishServiceAuthAccountsTip"]).concat(["发布审核", "管理员审批", "审核注册申请", "发布访问账号", "访问账号"]),
 
         // 关于
         getLang(["autoLaunch", "autoLaunchTip", "about", "about1", "about2", "about3", "about4", "about5", "about6",

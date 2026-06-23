@@ -59,6 +59,27 @@ ${window.siyuan.languages.publishServicePort}
         <input class="b3-switch fn__flex-center" id="publishAuthEnable" type="checkbox"${window.siyuan.config.publish.auth.enable ? " checked" : ""}/>
     </label>
 </div>
+<div class="b3-label config-publish-audit">
+    <div class="fn__flex config-publish-audit__header">
+        <div class="fn__flex-1">
+            <div class="config-publish-audit__title">发布审核</div>
+            <div class="b3-label__text">管理员在这里审核注册申请，并管理可登录发布站点的访问账号。</div>
+        </div>
+        <span class="fn__space"></span>
+        <div class="config-publish-audit__summary">
+            <span class="fn__flex-center b3-chip b3-chip--small b3-chip--info" id="publishTotalCount">加载中</span>
+            <span class="fn__flex-center b3-chip b3-chip--small" id="publishPendingCount">待审核</span>
+        </div>
+        <span class="fn__space"></span>
+        <button class="block__icon block__icon--show ariaLabel" data-action="refreshPublishUsers" data-position="north" aria-label="${window.siyuan.languages.refresh || "刷新"}">
+            <svg><use xlink:href="#iconRefresh"></use></svg>
+        </button>
+    </div>
+    <div class="fn__hr"></div>
+    <div id="publishUsers">
+        <div class="b3-label__text">正在加载发布访问账号...</div>
+    </div>
+</div>
 <div class="b3-label">
     ${(() => {
             if (mobile) {
@@ -88,16 +109,6 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
     <div class="fn__flex-1" id="publishAuthAccounts">
     </div>
 </div>
-<div class="b3-label">
-    <div class="fn__flex">
-        <div class="fn__flex-1">
-            发布访问账号
-            <div class="b3-label__text">审核注册申请，并管理可登录发布站点的访问账号。</div>
-        </div>
-    </div>
-    <div class="fn__hr"></div>
-    <div id="publishUsers"></div>
-</div>
 `;
     },
     bindEvent: () => {
@@ -119,6 +130,12 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
                 publish._savePublish();
             });
         });
+
+        publish.element
+            .querySelector('[data-action="refreshPublishUsers"]')
+            .addEventListener("click", () => {
+                publish._refreshPublishUsers();
+            });
 
         publish._refreshPublish();
         publish._refreshPublishUsers();
@@ -249,8 +266,18 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
     },
     _renderPublishUsers: (users: Config.IPublishUser[]) => {
         const publishUsers = publish.element.querySelector<HTMLDivElement>("#publishUsers");
+        const pendingCount = users.filter((user) => user.status === "pending").length;
+        const publishTotalCount = publish.element.querySelector<HTMLSpanElement>("#publishTotalCount");
+        const publishPendingCount = publish.element.querySelector<HTMLSpanElement>("#publishPendingCount");
+        publishTotalCount.textContent = `${users.length} 个账号`;
+        publishPendingCount.textContent = pendingCount > 0 ? `${pendingCount} 个待审核` : "无待审核";
+        publishPendingCount.className = `fn__flex-center b3-chip b3-chip--small ${pendingCount > 0 ? "b3-chip--warning" : "b3-chip--info"}`;
+
         if (users.length === 0) {
-            publishUsers.innerHTML = "<div class=\"b3-label__text\">暂无发布访问账号。</div>";
+            publishUsers.innerHTML = `<div class="config-publish-audit__empty">
+    <div class="config-publish-audit__empty-text">暂无发布访问账号</div>
+    <div class="b3-label__text">访客在发布站点提交注册申请后，会出现在这里供管理员审批。</div>
+</div>`;
             return;
         }
 
@@ -260,38 +287,48 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
             rejected: "已拒绝",
             disabled: "已禁用",
         };
+        const statusClasses: Record<Config.TPublishUserStatus, string> = {
+            pending: "b3-chip--warning",
+            approved: "b3-chip--success",
+            rejected: "b3-chip--error",
+            disabled: "b3-chip--info",
+        };
 
-        publishUsers.innerHTML = `<div class="fn__flex-column">${
-            users.map((user) => {
-                const username = escapeAttr(user.username);
-                const actions: string[] = [];
-                if (user.status === "pending") {
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="approve" data-username="${username}">批准</button>`);
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="reject" data-username="${username}">拒绝</button>`);
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
-                } else if (user.status === "approved") {
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="resetPassword" data-username="${username}">重置密码</button>`);
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="disable" data-username="${username}">禁用</button>`);
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
-                } else if (user.status === "rejected") {
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="approve" data-username="${username}">批准</button>`);
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
-                } else {
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="approve" data-username="${username}">启用</button>`);
-                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
-                }
+        publishUsers.innerHTML = `<div class="fn__flex-column config-publish-audit__list">` + users.map((user) => {
+            const username = escapeAttr(user.username);
+            const actions: string[] = [];
+            if (user.status === "pending") {
+                actions.push(`<button class="b3-button b3-button--outline config-publish-audit__button" data-action="approve" data-username="${username}"><svg><use xlink:href="#iconCheck"></use></svg>批准</button>`);
+                actions.push(`<button class="b3-button b3-button--outline config-publish-audit__button" data-action="reject" data-username="${username}"><svg><use xlink:href="#iconClose"></use></svg>拒绝</button>`);
+                actions.push(`<button class="b3-button b3-button--remove config-publish-audit__button" data-action="delete" data-username="${username}"><svg><use xlink:href="#iconTrashcan"></use></svg>删除</button>`);
+            } else if (user.status === "approved") {
+                actions.push(`<button class="b3-button b3-button--outline config-publish-audit__button" data-action="resetPassword" data-username="${username}"><svg><use xlink:href="#iconKey"></use></svg>重置密码</button>`);
+                actions.push(`<button class="b3-button b3-button--outline config-publish-audit__button" data-action="disable" data-username="${username}"><svg><use xlink:href="#iconLock"></use></svg>禁用</button>`);
+                actions.push(`<button class="b3-button b3-button--remove config-publish-audit__button" data-action="delete" data-username="${username}"><svg><use xlink:href="#iconTrashcan"></use></svg>删除</button>`);
+            } else if (user.status === "rejected") {
+                actions.push(`<button class="b3-button b3-button--outline config-publish-audit__button" data-action="approve" data-username="${username}"><svg><use xlink:href="#iconCheck"></use></svg>批准</button>`);
+                actions.push(`<button class="b3-button b3-button--remove config-publish-audit__button" data-action="delete" data-username="${username}"><svg><use xlink:href="#iconTrashcan"></use></svg>删除</button>`);
+            } else {
+                actions.push(`<button class="b3-button b3-button--outline config-publish-audit__button" data-action="approve" data-username="${username}"><svg><use xlink:href="#iconCheck"></use></svg>启用</button>`);
+                actions.push(`<button class="b3-button b3-button--remove config-publish-audit__button" data-action="delete" data-username="${username}"><svg><use xlink:href="#iconTrashcan"></use></svg>删除</button>`);
+            }
 
-                const created = user.created ? new Date(user.created).toLocaleString() : "";
-                return `<div class="b3-label b3-label--inner fn__flex" data-username="${username}">
-    <div class="fn__flex-1">
-        <div>${escapeHtml(user.username)}</div>
-        <div class="b3-label__text">${escapeHtml(user.nickname)} · ${statusLabels[user.status]}${created ? ` · ${escapeHtml(created)}` : ""}</div>
+            const created = user.created ? new Date(user.created).toLocaleString() : "";
+            const nickname = user.nickname ? escapeHtml(user.nickname) : "未填写昵称";
+            return `<div class="b3-label b3-label--inner config-publish-audit__user" data-username="${username}">
+    <div class="config-publish-audit__identity">
+        <div class="config-publish-audit__avatar">${escapeHtml(user.username.slice(0, 1).toUpperCase())}</div>
+        <div class="config-publish-audit__profile">
+            <div class="config-publish-audit__name">${escapeHtml(user.username)}</div>
+            <div class="b3-label__text">${nickname}${created ? ` · ${escapeHtml(created)}` : ""}</div>
+        </div>
     </div>
     <span class="fn__space"></span>
-    <div class="fn__flex">${actions.join("<span class=\"fn__space\"></span>")}</div>
+    <span class="b3-chip b3-chip--small ${statusClasses[user.status]} config-publish-audit__status">${statusLabels[user.status]}</span>
+    <span class="fn__space"></span>
+    <div class="config-publish-audit__actions">${actions.join("")}</div>
 </div>`;
-            }).join("")
-        }</div>`;
+        }).join("") + "</div>";
 
         publishUsers.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((button) => {
             button.addEventListener("click", () => {

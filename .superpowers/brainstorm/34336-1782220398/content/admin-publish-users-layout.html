@@ -1,0 +1,61 @@
+<h2>管理端：发布账号与注册审核区</h2>
+<p class="subtitle">基于现有“发布服务”设置页追加，不新建复杂后台。</p>
+
+<div class="mockup">
+  <div class="mockup-header">设置 > 发布</div>
+  <div class="mockup-body" style="display:flex;flex-direction:column;gap:14px">
+    <div style="border:1px solid #ddd;border-radius:8px;padding:12px;display:grid;grid-template-columns:1fr 120px;gap:12px;align-items:center">
+      <div>
+        <div style="height:18px;width:110px;background:#222;border-radius:4px"></div>
+        <div style="height:10px;width:75%;background:#ddd;border-radius:4px;margin-top:8px"></div>
+      </div>
+      <div style="height:28px;width:56px;background:#222;border-radius:14px;justify-self:end"></div>
+    </div>
+
+    <div style="border:1px solid #ddd;border-radius:8px;padding:12px;display:grid;grid-template-columns:1fr 160px;gap:12px;align-items:center">
+      <div>
+        <div style="height:18px;width:130px;background:#222;border-radius:4px"></div>
+        <div style="height:10px;width:82%;background:#ddd;border-radius:4px;margin-top:8px"></div>
+      </div>
+      <input class="mock-input" value="6808">
+    </div>
+
+    <div style="border:1px solid #ddd;border-radius:8px;padding:12px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="flex:1">
+          <div style="height:18px;width:160px;background:#222;border-radius:4px"></div>
+          <div style="height:10px;width:72%;background:#ddd;border-radius:4px;margin-top:8px"></div>
+        </div>
+        <button class="mock-button">新增账号</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1.1fr .8fr .8fr 1fr;gap:8px;border-bottom:1px solid #ddd;padding:8px 0;color:#666">
+        <div>用户名</div><div>昵称/备注</div><div>状态</div><div>操作</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.1fr .8fr .8fr 1fr;gap:8px;padding:10px 0;align-items:center">
+        <div>alice</div><div>研发组</div><div><span style="padding:2px 8px;border:1px solid #bbb;border-radius:12px">待审核</span></div>
+        <div style="display:flex;gap:6px"><button class="mock-button">批准</button><button class="mock-button" style="background:#777">拒绝</button></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.1fr .8fr .8fr 1fr;gap:8px;padding:10px 0;align-items:center;border-top:1px solid #eee">
+        <div>bob</div><div>外部访客</div><div><span style="padding:2px 8px;border:1px solid #bbb;border-radius:12px">已批准</span></div>
+        <div style="display:flex;gap:6px"><button class="mock-button">重置</button><button class="mock-button" style="background:#777">禁用</button><button class="mock-button" style="background:#999">删除</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)">
+    <div class="letter">OK</div>
+    <div class="content">
+      <h3>这个管理端结构可以</h3>
+      <p>沿用设置页卡片式标签区，把账号审核作为发布设置的一部分。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="revise" onclick="toggleSelect(this)">
+    <div class="letter">R</div>
+    <div class="content">
+      <h3>需要调整</h3>
+      <p>例如需要独立标签页、搜索过滤、批量审核，或更强调待审核队列。</p>
+    </div>
+  </div>
+</div>
