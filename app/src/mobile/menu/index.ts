@@ -12,7 +12,6 @@ import {openCard} from "../../card/openCard";
 import {activeBlur} from "../util/keyboardToolbar";
 import {initAI} from "../settings/ai";
 import {initRiffCard} from "../settings/riffCard";
-import {login, showAccountInfo} from "../settings/account";
 import {openModel} from "./model";
 import {initAbout} from "../settings/about";
 import {getRecentDocs} from "./getRecentDocs";
@@ -38,17 +37,7 @@ export const popMenu = () => {
 
 export const initRightMenu = (app: App) => {
     const menuElement = document.getElementById("menu");
-    let accountHTML = "";
-    if (window.siyuan.user && !window.siyuan.config.readonly) {
-        accountHTML = `<div class="b3-menu__item" id="menuAccount">
-    <img class="b3-menu__icon" src="${window.siyuan.user.userAvatarURL}"/>
-    <span class="b3-menu__label">${window.siyuan.user.userName}</span>
-</div>`;
-    } else if (!window.siyuan.config.readonly) {
-        accountHTML = `<div class="b3-menu__item" id="menuAccount">
-    <svg class="b3-menu__icon"><use xlink:href="#iconAccount"></use></svg><span class="b3-menu__label">${window.siyuan.languages.login}</span>
-</div>`;
-    }
+    const accountHTML = "";
 
     let aiHTML = `<div class="b3-menu__item${window.siyuan.config.readonly ? " fn__none" : ""}" id="menuAI">
         <svg class="b3-menu__icon"><use xlink:href="#iconSparkles"></use></svg><span class="b3-menu__label">AI</span>
@@ -292,15 +281,6 @@ export const initRightMenu = (app: App) => {
                 openHistory(app);
                 event.preventDefault();
                 event.stopPropagation();
-                break;
-            } else if (target.id === "menuAccount") {
-                event.preventDefault();
-                event.stopPropagation();
-                if (document.querySelector("#menuAccount img")) {
-                    showAccountInfo();
-                    return;
-                }
-                login();
                 break;
             }
             target = target.parentElement;
