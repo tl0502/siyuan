@@ -154,32 +154,6 @@ func DeactivateUser() (err error) {
 	return
 }
 
-func SetCloudBlockReminder(id, data string, timed int64) (err error) {
-	requestResult := gulu.Ret.NewResult()
-	payload := map[string]any{"dataId": id, "data": data, "timed": timed}
-	request := httpclient.NewCloudRequest30s()
-	resp, err := request.
-		SetSuccessResult(requestResult).
-		SetBody(payload).
-		SetCookies(&http.Cookie{Name: "symphony", Value: Conf.GetUser().UserToken}).
-		Post(util.GetCloudServer() + "/apis/siyuan/calendar/setBlockReminder")
-	if err != nil {
-		logging.LogErrorf("set block reminder failed: %s", err)
-		return ErrFailedToConnectCloudServer
-	}
-
-	if 401 == resp.StatusCode {
-		err = errors.New(Conf.Language(31))
-		return
-	}
-
-	if 0 != requestResult.Code {
-		logging.LogErrorf("set block reminder failed: %s", requestResult.Msg)
-		return errors.New(requestResult.Msg)
-	}
-	return
-}
-
 var uploadToken = ""
 var uploadTokenTime int64
 

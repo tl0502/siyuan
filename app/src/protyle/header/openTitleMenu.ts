@@ -1,6 +1,6 @@
 import {fetchPost, fetchSyncPost} from "../../util/fetch";
 import {MenuItem} from "../../menus/Menu";
-import {copySubMenu, exportMd, movePathToMenu, openFileAttr, openFileWechatNotify,} from "../../menus/commonMenuItem";
+import {copySubMenu, exportMd, movePathToMenu, openFileAttr} from "../../menus/commonMenuItem";
 import {deleteFile} from "../../editor/deleteFile";
 import {encodeBase64, updateHotkeyTip} from "../util/compatibility";
 /// #if !MOBILE
@@ -157,16 +157,6 @@ export const openTitleMenu = (protyle: IProtyle, position: IPosition, from: stri
             }
         }).element);
         if (!window.siyuan.config.readonly) {
-            if (window.siyuan.config.cloudRegion === 0) {
-                window.siyuan.menus.menu.append(new MenuItem({
-                    id: "wechatReminder",
-                    label: window.siyuan.languages.wechatReminder,
-                    icon: "iconMp",
-                    click() {
-                        openFileWechatNotify(protyle);
-                    }
-                }).element);
-            }
             const isCardMade = !!response.data.ial[Constants.CUSTOM_RIFF_DECKS];
             const riffCardMenu: IMenu[] = [{
                 id: "spaceRepetition",
