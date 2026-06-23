@@ -82,6 +82,11 @@ export const bindSyncCloudListEvent = (cloudPanelElement: Element, cb?: () => vo
 };
 
 export const getSyncCloudList = (cloudPanelElement: Element, reload = false, cb?: () => void) => {
+    if (window.siyuan.config.sync.provider === 0) {
+        cloudPanelElement.innerHTML = `<div class="b3-list-item">${window.siyuan.languages._kernel[29] || "Official service is disabled in this fork."}</div>`;
+        return;
+    }
+
     if (!reload && cloudPanelElement.firstElementChild.tagName !== "IMG") {
         return;
     }
