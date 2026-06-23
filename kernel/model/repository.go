@@ -1244,13 +1244,6 @@ func syncRepoDownload() (err error) {
 
 		logging.LogErrorf("sync data repo download failed: %s", err)
 		msg := fmt.Sprintf(Conf.Language(80), formatRepoErrorMsg(err))
-		if errors.Is(err, dejavu.ErrCloudStorageSizeExceeded) {
-			u := Conf.GetUser()
-			msg = fmt.Sprintf(Conf.Language(43), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			if 2 == u.UserSiYuanSubscriptionPlan {
-				msg = fmt.Sprintf(Conf.Language(68), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			}
-		}
 		Conf.Sync.Stat = msg
 		Conf.Save()
 		util.PushStatusBar(msg)
@@ -1316,13 +1309,6 @@ func syncRepoUpload() (err error) {
 
 		logging.LogErrorf("sync data repo upload failed: %s", err)
 		msg := fmt.Sprintf(Conf.Language(80), formatRepoErrorMsg(err))
-		if errors.Is(err, dejavu.ErrCloudStorageSizeExceeded) {
-			u := Conf.GetUser()
-			msg = fmt.Sprintf(Conf.Language(43), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			if 2 == u.UserSiYuanSubscriptionPlan {
-				msg = fmt.Sprintf(Conf.Language(68), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			}
-		}
 		Conf.Sync.Stat = msg
 		Conf.Save()
 		util.PushStatusBar(msg)
@@ -1437,13 +1423,6 @@ func bootSyncRepo() (err error) {
 
 		logging.LogErrorf("sync data repo failed: %s", err)
 		msg := fmt.Sprintf(Conf.Language(80), formatRepoErrorMsg(err))
-		if errors.Is(err, dejavu.ErrCloudStorageSizeExceeded) {
-			u := Conf.GetUser()
-			msg = fmt.Sprintf(Conf.Language(43), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			if 2 == u.UserSiYuanSubscriptionPlan {
-				msg = fmt.Sprintf(Conf.Language(68), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			}
-		}
 		Conf.Sync.Stat = msg
 		Conf.Save()
 		util.PushStatusBar(msg)
@@ -1538,13 +1517,6 @@ func syncRepo(exit, byHand bool) (dataChanged bool, err error) {
 
 		logging.LogErrorf("sync data repo failed: %s", err)
 		msg := fmt.Sprintf(Conf.Language(80), formatRepoErrorMsg(err))
-		if errors.Is(err, dejavu.ErrCloudStorageSizeExceeded) {
-			u := Conf.GetUser()
-			msg = fmt.Sprintf(Conf.Language(43), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			if 2 == u.UserSiYuanSubscriptionPlan {
-				msg = fmt.Sprintf(Conf.Language(68), humanize.BytesCustomCeil(uint64(u.UserSiYuanRepoSize), 2))
-			}
-		}
 		Conf.Sync.Stat = msg
 		Conf.Save()
 		util.PushStatusBar(msg)
