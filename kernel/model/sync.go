@@ -253,12 +253,6 @@ func checkSync(boot, exit, byHand bool) bool {
 			util.PushErrMsg(ErrOfficialServiceDisabled.Error(), 5000)
 		}
 		return false
-	case conf.ProviderWebDAV, conf.ProviderS3, conf.ProviderLocal:
-		if !IsPaidUser() {
-			Conf.Sync.Enabled = false
-			Conf.Save()
-			return false
-		}
 	}
 
 	if 7 < autoSyncErrCount && !byHand {

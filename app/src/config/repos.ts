@@ -1,29 +1,16 @@
-import {isPaidUser} from "../util/needSubscribe";
 import {fetchPost, fetchSyncPost} from "../util/fetch";
 import {showMessage} from "../dialog/message";
 import {bindSyncCloudListEvent, getSyncCloudList} from "../sync/syncGuide";
 import {processSync} from "../dialog/processSystem";
-import {getCloudURL} from "./util/about";
 import {openByMobile} from "../protyle/util/compatibility";
 
 const renderProvider = (provider: number) => {
     if (provider === 0) {
-        return `<div class="b3-label b3-label--inner">${window.siyuan.languages._kernel[29] || "Official service is disabled in this fork."}</div>`;
-    }
-    if (!isPaidUser()) {
-        return `<div>
-    ${window.siyuan.languages["_kernel"][214].replaceAll("${accountServer}", getCloudURL(""))}
-</div>
-<div class="ft__error${provider == 4 ? "" : " fn__none"}">
-    <div class="fn__hr--b"></div>
-    ${window.siyuan.languages.mobileNotSupport}
-</div>`;
+        return `<div class="b3-label b3-label--inner">Official service is disabled in this fork.</div>`;
     }
     if (provider === 2) {
         return `<div class="b3-label b3-label--inner">
     ${window.siyuan.languages.syncThirdPartyProviderS3Intro}
-    <div class="fn__hr"></div>
-    <em>${window.siyuan.languages.proFeature}</em>
     <div class="fn__hr"></div>
     ${window.siyuan.languages.syncThirdPartyProviderTip}
 </div>
@@ -96,8 +83,6 @@ const renderProvider = (provider: number) => {
         return `<div class="b3-label b3-label--inner">
     ${window.siyuan.languages.syncThirdPartyProviderWebDAVIntro}
     <div class="fn__hr"></div>
-    <em>${window.siyuan.languages.proFeature}</em>
-    <div class="fn__hr"></div>
     ${window.siyuan.languages.syncThirdPartyProviderTip}
 </div>
 <div class="b3-label b3-label--inner fn__flex">
@@ -154,8 +139,6 @@ const renderProvider = (provider: number) => {
     </div>
     <div class="fn__hr"></div>
     ${window.siyuan.languages.syncThirdPartyProviderLocalIntro}
-    <div class="fn__hr"></div>
-    <em>${window.siyuan.languages.proFeature}</em>
 </div>
 <div class="b3-label b3-label--inner fn__flex">
     <div class="fn__flex-center fn__size200">Endpoint</div>
@@ -177,9 +160,6 @@ const renderProvider = (provider: number) => {
 };
 
 const fillSyncProviderPanelValues = (panel: Element) => {
-    if (!isPaidUser()) {
-        return;
-    }
     const provider = window.siyuan.config.sync.provider;
     if (provider === 2) {
         const s3 = window.siyuan.config.sync.s3;

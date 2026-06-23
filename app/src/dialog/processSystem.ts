@@ -15,7 +15,6 @@ import {isMobile} from "../util/functions";
 import {confirmDialog} from "./confirmDialog";
 import {escapeHtml} from "../util/escape";
 import {getWorkspaceName} from "../util/noRelyPCFunction";
-import {needSubscribe} from "../util/needSubscribe";
 import {setNoteBook} from "../util/pathName";
 import {reloadProtyle} from "../protyle/util/reload";
 import {Tab} from "../layout/Tab";
@@ -567,7 +566,7 @@ export const processSync = (data?: IWebSocketData, plugins?: Plugin[]) => {
     const menuSyncUseElement = document.querySelector("#menuSyncNow use");
     const barSyncUseElement = document.querySelector("#toolbarSync use");
     if (!data) {
-        if (!window.siyuan.config.sync.enabled || (0 === window.siyuan.config.sync.provider && needSubscribe(""))) {
+        if (!window.siyuan.config.sync.enabled || 0 === window.siyuan.config.sync.provider) {
             menuSyncUseElement?.setAttribute("xlink:href", "#iconCloudOff");
             barSyncUseElement.setAttribute("xlink:href", "#iconCloudOff");
         } else {
@@ -598,7 +597,7 @@ export const processSync = (data?: IWebSocketData, plugins?: Plugin[]) => {
     const useElement = iconElement.querySelector("use");
     if (!data) {
         iconElement.classList.remove("toolbar__item--active");
-        if (!window.siyuan.config.sync.enabled || (0 === window.siyuan.config.sync.provider && needSubscribe(""))) {
+        if (!window.siyuan.config.sync.enabled || 0 === window.siyuan.config.sync.provider) {
             useElement.setAttribute("xlink:href", "#iconCloudOff");
         } else {
             useElement.setAttribute("xlink:href", "#iconCloudSucc");

@@ -1,16 +1,10 @@
-import {isPaidUser, needSubscribe} from "../util/needSubscribe";
 import {showMessage} from "../dialog/message";
 import {fetchPost} from "../util/fetch";
 import {Dialog} from "../dialog";
 import {confirmDialog} from "../dialog/confirmDialog";
 import {isMobile} from "../util/functions";
 import {processSync} from "../dialog/processSystem";
-/// #if !MOBILE
-import {openSetting} from "../config";
-/// #endif
-import {App} from "../index";
 import {Constants} from "../constants";
-import {getCloudURL} from "../config/util/about";
 
 export const addCloudName = (cloudPanelElement: Element) => {
     const dialog = new Dialog({
@@ -149,35 +143,16 @@ export const getSyncCloudList = (cloudPanelElement: Element, reload = false, cb?
     });
 };
 
-export const syncGuide = (app?: App) => {
+export const syncGuide = () => {
     if (window.siyuan.config.readonly) {
         return;
     }
-    /// #if MOBILE
     if (0 === window.siyuan.config.sync.provider) {
-        if (needSubscribe()) {
-            return;
-        }
-    } else if (!isPaidUser()) {
-        showMessage(window.siyuan.languages["_kernel"][214].replaceAll("${accountServer}", getCloudURL("")));
+        showMessage("Official service is disabled in this fork.");
         return;
     }
-    /// #else
+    /// #if !MOBILE
     if (document.querySelector("#barSync")?.classList.contains("toolbar__item--active")) {
-        return;
-    }
-    if (0 === window.siyuan.config.sync.provider && needSubscribe("") && app) {
-        const dialogSetting = openSetting(app);
-        if (window.siyuan.user) {
-            dialogSetting.element.querySelector('.b3-tab-bar [data-name="repos"]').dispatchEvent(new CustomEvent("click"));
-        } else {
-            dialogSetting.element.querySelector('.b3-tab-bar [data-name="account"]').dispatchEvent(new CustomEvent("click"));
-            dialogSetting.element.querySelector('.config__tab-container[data-name="account"]').setAttribute("data-action", "go-repos");
-        }
-        return;
-    }
-    if (0 !== window.siyuan.config.sync.provider && !isPaidUser() && app) {
-        showMessage(window.siyuan.languages["_kernel"][214].replaceAll("${accountServer}", getCloudURL("")));
         return;
     }
     /// #endif
