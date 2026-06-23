@@ -53,6 +53,7 @@ EXPOSE 6806
 WORKDIR /opt/siyuan/
 COPY --from=go-build --chmod=755 /kernel/kernel /kernel/entrypoint.sh .
 COPY --from=node-build /artifacts .
+RUN sed -i 's/\r$//' /opt/siyuan/entrypoint.sh
 
 ENTRYPOINT ["/opt/siyuan/entrypoint.sh"]
 CMD ["/opt/siyuan/kernel"]
