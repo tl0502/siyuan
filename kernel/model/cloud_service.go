@@ -23,13 +23,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/88250/gulu"
-	"github.com/88250/lute/parse"
 	"github.com/siyuan-note/httpclient"
 	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/conf"
@@ -421,129 +418,16 @@ func loadUserFromConf() *conf.User {
 }
 
 func RemoveCloudShorthands(ids []string) (err error) {
-	result := map[string]any{}
-	request := httpclient.NewCloudRequest30s()
-	body := map[string]any{
-		"ids": ids,
-	}
-	resp, err := request.
-		SetSuccessResult(&result).
-		SetCookies(&http.Cookie{Name: "symphony", Value: Conf.GetUser().UserToken}).
-		SetBody(body).
-		Post(util.GetCloudServer() + "/apis/siyuan/inbox/removeCloudShorthands")
-	if err != nil {
-		logging.LogErrorf("remove cloud shorthands failed: %s", err)
-		err = ErrFailedToConnectCloudServer
-		return
-	}
-
-	if 401 == resp.StatusCode {
-		err = errors.New(Conf.Language(31))
-		return
-	}
-
-	code := result["code"].(float64)
-	if 0 != code {
-		logging.LogErrorf("remove cloud shorthands failed: %s", result["msg"])
-		err = errors.New(result["msg"].(string))
-		return
-	}
-	return
+	return ErrOfficialServiceDisabled
 }
 
 func GetCloudShorthand(id string) (ret map[string]any, err error) {
-	result := map[string]any{}
-	request := httpclient.NewCloudRequest30s()
-	resp, err := request.
-		SetSuccessResult(&result).
-		SetCookies(&http.Cookie{Name: "symphony", Value: Conf.GetUser().UserToken}).
-		Post(util.GetCloudServer() + "/apis/siyuan/inbox/getCloudShorthand?id=" + id)
-	if err != nil {
-		logging.LogErrorf("get cloud shorthand failed: %s", err)
-		err = ErrFailedToConnectCloudServer
-		return
-	}
-
-	if 401 == resp.StatusCode {
-		err = errors.New(Conf.Language(31))
-		return
-	}
-
-	code := result["code"].(float64)
-	if 0 != code {
-		logging.LogErrorf("get cloud shorthand failed: %s", result["msg"])
-		err = errors.New(result["msg"].(string))
-		return
-	}
-	ret = result["data"].(map[string]any)
-	t, _ := strconv.ParseInt(id, 10, 64)
-	hCreated := util.Millisecond2Time(t)
-	ret["hCreated"] = hCreated.Format("2006-01-02 15:04")
-
-	md := ret["shorthandContent"].(string)
-	ret["shorthandMd"] = md
-
-	luteEngine := NewLute()
-	luteEngine.SetFootnotes(true)
-	tree := parse.Parse("", []byte(md), luteEngine.ParseOptions)
-	luteEngine.RenderOptions.ProtyleMarkNetImg = false
-	content := luteEngine.ProtylePreview(tree, luteEngine.RenderOptions, luteEngine.ParseOptions)
-	ret["shorthandContent"] = content
+	err = ErrOfficialServiceDisabled
 	return
 }
 
 func GetCloudShorthands(page int) (result map[string]any, err error) {
-	result = map[string]any{}
-	request := httpclient.NewCloudRequest30s()
-	resp, err := request.
-		SetSuccessResult(&result).
-		SetCookies(&http.Cookie{Name: "symphony", Value: Conf.GetUser().UserToken}).
-		Post(util.GetCloudServer() + "/apis/siyuan/inbox/getCloudShorthands?p=" + strconv.Itoa(page))
-	if err != nil {
-		logging.LogErrorf("get cloud shorthands failed: %s", err)
-		err = ErrFailedToConnectCloudServer
-		return
-	}
-
-	if 401 == resp.StatusCode {
-		err = errors.New(Conf.Language(31))
-		return
-	}
-
-	code := result["code"].(float64)
-	if 0 != code {
-		logging.LogErrorf("get cloud shorthands failed: %s", result["msg"])
-		err = errors.New(result["msg"].(string))
-		return
-	}
-
-	luteEngine := NewLute()
-	audioRegexp := regexp.MustCompile("<audio.*>.*</audio>")
-	videoRegexp := regexp.MustCompile("<video.*>.*</video>")
-	fileRegexp := regexp.MustCompile("\\[文件]\\(.*\\)")
-	shorthands := result["data"].(map[string]any)["shorthands"].([]any)
-	for _, item := range shorthands {
-		shorthand := item.(map[string]any)
-		id := shorthand["oId"].(string)
-		t, _ := strconv.ParseInt(id, 10, 64)
-		hCreated := util.Millisecond2Time(t)
-		shorthand["hCreated"] = hCreated.Format("2006-01-02 15:04")
-
-		desc := shorthand["shorthandDesc"].(string)
-		desc = audioRegexp.ReplaceAllString(desc, " 语音 ")
-		desc = videoRegexp.ReplaceAllString(desc, " 视频 ")
-		desc = fileRegexp.ReplaceAllString(desc, " 文件 ")
-		desc = strings.ReplaceAll(desc, "\n\n", "")
-		desc = strings.TrimSpace(desc)
-		shorthand["shorthandDesc"] = desc
-
-		md := shorthand["shorthandContent"].(string)
-		shorthand["shorthandMd"] = md
-		tree := parse.Parse("", []byte(md), luteEngine.ParseOptions)
-		luteEngine.RenderOptions.ProtyleMarkNetImg = false
-		content := luteEngine.ProtylePreview(tree, luteEngine.RenderOptions, luteEngine.ParseOptions)
-		shorthand["shorthandContent"] = content
-	}
+	err = ErrOfficialServiceDisabled
 	return
 }
 
