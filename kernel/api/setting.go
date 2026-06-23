@@ -694,6 +694,98 @@ func getPublish(c *gin.Context) {
 	}
 }
 
+func getPublishUsers(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	users, err := model.ListPublishUsersPublic()
+	if err != nil {
+		ret.Code = -1
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Data = map[string]any{"users": users}
+}
+
+func approvePublishUser(c *gin.Context) {
+	setPublishUserStatus(c, model.PublishUserStatusApproved)
+}
+
+func rejectPublishUser(c *gin.Context) {
+	setPublishUserStatus(c, model.PublishUserStatusRejected)
+}
+
+func disablePublishUser(c *gin.Context) {
+	setPublishUserStatus(c, model.PublishUserStatusDisabled)
+}
+
+func setPublishUserStatus(c *gin.Context, status model.PublishUserStatus) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	username, ok := publishUsernameArg(c, ret)
+	if !ok {
+		return
+	}
+	user, err := model.SetPublishUserStatus(username, status)
+	if err != nil {
+		ret.Code = -1
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Data = map[string]any{"user": model.PublishUserPublic{
+		Username: user.Username,
+		Nickname: user.Nickname,
+		Status:   user.Status,
+		Created:  user.Created,
+		Updated:  user.Updated,
+	}}
+}
+
+func deletePublishUser(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	username, ok := publishUsernameArg(c, ret)
+	if !ok {
+		return
+	}
+	if err := model.DeletePublishUser(username); err != nil {
+		ret.Code = -1
+		ret.Msg = err.Error()
+	}
+}
+
+func resetPublishUserPassword(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+	username, _ := arg["username"].(string)
+	password, _ := arg["password"].(string)
+	if err := model.ResetPublishUserPassword(username, password); err != nil {
+		ret.Code = -1
+		ret.Msg = err.Error()
+	}
+}
+
+func publishUsernameArg(c *gin.Context, ret *gulu.Result) (string, bool) {
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return "", false
+	}
+	username, _ := arg["username"].(string)
+	if strings.TrimSpace(username) == "" {
+		ret.Code = -1
+		ret.Msg = model.ErrPublishUserInvalid.Error()
+		return "", false
+	}
+	return username, true
+}
+
 func getCloudUser(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(http.StatusOK, ret)
