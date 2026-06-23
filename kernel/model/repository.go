@@ -2001,7 +2001,8 @@ func newRepository() (ret *dejavu.Repo, err error) {
 	var cloudRepo cloud.Cloud
 	switch Conf.Sync.Provider {
 	case conf.ProviderSiYuan:
-		cloudRepo = cloud.NewSiYuan(&cloud.BaseCloud{Conf: cloudConf})
+		err = ErrOfficialServiceDisabled
+		return
 	case conf.ProviderS3:
 		s3HTTPClient := &http.Client{Transport: httpclient.NewTransport(cloudConf.S3.SkipTlsVerify)}
 		s3HTTPClient.Timeout = time.Duration(cloudConf.S3.Timeout) * time.Second

@@ -249,11 +249,10 @@ func checkSync(boot, exit, byHand bool) bool {
 
 	switch Conf.Sync.Provider {
 	case conf.ProviderSiYuan:
-		if !IsSubscriber() {
-			Conf.Sync.Enabled = false
-			Conf.Save()
-			return false
+		if byHand {
+			util.PushErrMsg(ErrOfficialServiceDisabled.Error(), 5000)
 		}
+		return false
 	case conf.ProviderWebDAV, conf.ProviderS3, conf.ProviderLocal:
 		if !IsPaidUser() {
 			Conf.Sync.Enabled = false
@@ -368,6 +367,11 @@ func upsertIndexes(upsertFilePaths []string) (upsertRootIDs []string) {
 }
 
 func SetCloudSyncDir(name string) {
+	if conf.ProviderSiYuan == Conf.Sync.Provider {
+		util.PushErrMsg(ErrOfficialServiceDisabled.Error(), 5000)
+		return
+	}
+
 	if !cloud.IsValidCloudDirName(name) {
 		util.PushErrMsg(Conf.Language(37), 5000)
 		return
@@ -426,6 +430,10 @@ func SetSyncMode(mode int) {
 }
 
 func SetSyncProvider(provider int) (err error) {
+	if conf.ProviderSiYuan == provider {
+		return ErrOfficialServiceDisabled
+	}
+
 	Conf.Sync.Provider = provider
 	Conf.Save()
 	return
@@ -511,8 +519,12 @@ var (
 )
 
 func CreateCloudSyncDir(name string) (err error) {
+	if conf.ProviderSiYuan == Conf.Sync.Provider {
+		return ErrOfficialServiceDisabled
+	}
+
 	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan, conf.ProviderLocal:
+	case conf.ProviderLocal:
 		break
 	default:
 		err = errors.New(Conf.Language(131))
@@ -538,8 +550,12 @@ func CreateCloudSyncDir(name string) (err error) {
 }
 
 func RemoveCloudSyncDir(name string) (err error) {
+	if conf.ProviderSiYuan == Conf.Sync.Provider {
+		return ErrOfficialServiceDisabled
+	}
+
 	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan, conf.ProviderLocal:
+	case conf.ProviderLocal:
 		break
 	default:
 		err = errors.New(Conf.Language(131))
@@ -571,6 +587,11 @@ func RemoveCloudSyncDir(name string) (err error) {
 
 func ListCloudSyncDir() (syncDirs []*Sync, hSize string, err error) {
 	syncDirs = []*Sync{}
+	if conf.ProviderSiYuan == Conf.Sync.Provider {
+		err = ErrOfficialServiceDisabled
+		return
+	}
+
 	var dirs []*cloud.Repo
 	var size int64
 
@@ -794,97 +815,8 @@ func closeSyncWebSocket() {
 func connectSyncWebSocket() {
 	defer logging.Recover()
 
-	if !Conf.Sync.Enabled || !IsSubscriber() || conf.ProviderSiYuan != Conf.Sync.Provider {
-		return
-	}
-
-	if util.ContainerDocker == util.Container {
-		return
-	}
-
-	webSocketConnLock.Lock()
-	defer webSocketConnLock.Unlock()
-
-	if nil != webSocketConn {
-		return
-	}
-
-	//logging.LogInfof("connecting sync websocket...")
-	var dialErr error
-	webSocketConn, dialErr = dialSyncWebSocket()
-	if nil != dialErr {
-		logging.LogWarnf("connect sync websocket failed: %s", dialErr)
-		return
-	}
-	logging.LogInfof("sync websocket connected")
-
-	webSocketConn.SetCloseHandler(func(code int, text string) error {
-		logging.LogWarnf("sync websocket closed: %d, %s", code, text)
-		return nil
-	})
-
-	go func() {
-		defer logging.Recover()
-
-		for {
-			result := gulu.Ret.NewResult()
-			if readErr := webSocketConn.ReadJSON(&result); nil != readErr {
-				time.Sleep(1 * time.Second)
-				if closedSyncWebSocket.Load() {
-					return
-				}
-
-				reconnected := false
-				for retries := 0; retries < 7; retries++ {
-					time.Sleep(7 * time.Second)
-					if nil == Conf.GetUser() {
-						return
-					}
-
-					//logging.LogInfof("reconnecting sync websocket...")
-					webSocketConn, dialErr = dialSyncWebSocket()
-					if nil != dialErr {
-						logging.LogWarnf("reconnect sync websocket failed: %s", dialErr)
-						continue
-					}
-
-					logging.LogInfof("sync websocket reconnected")
-					reconnected = true
-					break
-				}
-				if !reconnected {
-					logging.LogWarnf("reconnect sync websocket failed, do not retry")
-					webSocketConn = nil
-					return
-				}
-
-				continue
-			}
-
-			logging.LogInfof("sync websocket message: %v", result)
-			data := result.Data.(map[string]any)
-			switch data["cmd"].(string) {
-			case "synced":
-				// Improve data synchronization perception https://github.com/siyuan-note/siyuan/issues/13000
-				SyncDataDownload()
-			case "kernels":
-				onlineKernelsLock.Lock()
-
-				onlineKernels = []*OnlineKernel{}
-				for _, kernel := range data["kernels"].([]any) {
-					kernelMap := kernel.(map[string]any)
-					onlineKernels = append(onlineKernels, &OnlineKernel{
-						ID:       kernelMap["id"].(string),
-						Hostname: kernelMap["hostname"].(string),
-						OS:       kernelMap["os"].(string),
-						Ver:      kernelMap["ver"].(string),
-					})
-				}
-
-				onlineKernelsLock.Unlock()
-			}
-		}
-	}()
+	// Official sync websocket is disabled in this fork.
+	return
 }
 
 var KernelID = gulu.Rand.String(7)
