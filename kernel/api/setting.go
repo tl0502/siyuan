@@ -727,20 +727,8 @@ func login2faCloudUser(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(http.StatusOK, ret)
 
-	arg, ok := util.JsonArg(c, ret)
-	if !ok {
-		return
-	}
-
-	token := arg["token"].(string)
-	code := arg["code"].(string)
-	data, err := model.Login2fa(token, code)
-	if err != nil {
-		ret.Code = -1
-		ret.Msg = err.Error()
-		return
-	}
-	ret.Data = data
+	ret.Code = -1
+	ret.Msg = model.ErrOfficialServiceDisabled.Error()
 }
 
 func setEmoji(c *gin.Context) {

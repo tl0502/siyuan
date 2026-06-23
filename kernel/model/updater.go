@@ -80,6 +80,8 @@ func getNewVerInstallPkgPath() string {
 var checkDownloadInstallPkgLock = sync.Mutex{}
 
 func checkDownloadInstallPkg() {
+	return
+
 	defer logging.Recover()
 
 	if skipNewVerInstallPkg() {
@@ -120,6 +122,9 @@ func checkDownloadInstallPkg() {
 }
 
 func getUpdatePkg() (downloadPkgURLs []string, checksum string, err error) {
+	err = ErrOfficialServiceDisabled
+	return
+
 	defer logging.Recover()
 	result, err := util.GetRhyResult(context.TODO(), false)
 	if err != nil {
@@ -247,6 +252,8 @@ type Announcement struct {
 }
 
 func getAnnouncements() (ret []*Announcement) {
+	return
+
 	result, err := util.GetRhyResult(context.TODO(), false)
 	if err != nil {
 		logging.LogErrorf("get announcement failed: %s", err)
@@ -271,6 +278,11 @@ func getAnnouncements() (ret []*Announcement) {
 }
 
 func CheckUpdate(showMsg bool) {
+	if showMsg {
+		util.PushUpdateMsg("update-notify", ErrOfficialServiceDisabled.Error(), 3000)
+	}
+	return
+
 	if !showMsg {
 		return
 	}

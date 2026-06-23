@@ -38,8 +38,13 @@ import (
 )
 
 var ErrFailedToConnectCloudServer = errors.New("failed to connect cloud server")
+var ErrOfficialServiceDisabled = errors.New("Official service is disabled in this fork.")
 
 func CloudChatGPT(msg string, contextMsgs []string) (ret string, stop bool, err error) {
+	stop = true
+	err = ErrOfficialServiceDisabled
+	return
+
 	if nil == Conf.GetUser() {
 		return
 	}
@@ -100,6 +105,8 @@ func CloudChatGPT(msg string, contextMsgs []string) (ret string, stop bool, err 
 }
 
 func StartFreeTrial() (err error) {
+	return ErrOfficialServiceDisabled
+
 	if nil == Conf.GetUser() {
 		return errors.New(Conf.Language(31))
 	}
@@ -125,6 +132,8 @@ func StartFreeTrial() (err error) {
 }
 
 func DeactivateUser() (err error) {
+	return ErrOfficialServiceDisabled
+
 	requestResult := gulu.Ret.NewResult()
 	request := httpclient.NewCloudRequest30s()
 	resp, err := request.
@@ -215,16 +224,14 @@ var (
 )
 
 func RefreshCheckJob2H() {
-	go refreshSubscriptionExpirationRemind()
-	go refreshUser()
-	go refreshAnnouncement()
 }
 
 func RefreshCheckJob6H() {
-	go refreshCheckDownloadInstallPkg()
 }
 
 func refreshSubscriptionExpirationRemind() {
+	return
+
 	if subscriptionExpirationReminded {
 		return
 	}
@@ -259,6 +266,8 @@ func refreshSubscriptionExpirationRemind() {
 }
 
 func refreshUser() {
+	return
+
 	defer logging.Recover()
 
 	if nil != Conf.GetUser() {
@@ -278,6 +287,8 @@ func refreshCheckDownloadInstallPkg() {
 }
 
 func refreshAnnouncement() {
+	return
+
 	defer logging.Recover()
 
 	time.Sleep(1 * time.Minute)
@@ -577,6 +588,8 @@ func getUser(token string) (*conf.User, error) {
 }
 
 func UseActivationcode(code string) (err error) {
+	return ErrOfficialServiceDisabled
+
 	code = util.RemoveInvalid(code)
 	requestResult := gulu.Ret.NewResult()
 	request := httpclient.NewCloudRequest30s()
@@ -600,6 +613,8 @@ func UseActivationcode(code string) (err error) {
 }
 
 func CheckActivationcode(code string) (retCode int, msg string) {
+	return -1, ErrOfficialServiceDisabled.Error()
+
 	code = util.RemoveInvalid(code)
 	retCode = 1
 	requestResult := gulu.Ret.NewResult()
@@ -627,6 +642,11 @@ func CheckActivationcode(code string) (retCode int, msg string) {
 }
 
 func Login(userName, password, captcha string, cloudRegion int) (ret *gulu.Result) {
+	ret = gulu.Ret.NewResult()
+	ret.Code = -1
+	ret.Msg = ErrOfficialServiceDisabled.Error()
+	return
+
 	Conf.CloudRegion = cloudRegion
 	Conf.Save()
 	util.CurrentCloudRegion = cloudRegion
