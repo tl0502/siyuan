@@ -130,37 +130,64 @@ const publishLoginHTML = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Publish Login</title>
+<style>
+:root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { margin: 0; min-height: 100vh; background: Canvas; color: CanvasText; }
+main { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 440px); }
+.context { padding: clamp(32px, 7vw, 88px); display: flex; flex-direction: column; justify-content: center; border-right: 1px solid color-mix(in srgb, CanvasText 16%, transparent); }
+.context h1 { margin: 0 0 16px; font-size: clamp(32px, 5vw, 56px); line-height: 1.05; letter-spacing: 0; }
+.context p { max-width: 620px; margin: 0; color: color-mix(in srgb, CanvasText 72%, transparent); line-height: 1.7; }
+.panel-wrap { display: flex; align-items: center; justify-content: center; padding: 24px; }
+.panel { width: min(100%, 360px); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+button { height: 36px; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); background: Canvas; color: CanvasText; border-radius: 6px; cursor: pointer; }
+button.active, form button { background: CanvasText; color: Canvas; }
+form { display: flex; flex-direction: column; gap: 12px; }
+input { height: 36px; box-sizing: border-box; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 6px; background: Canvas; color: CanvasText; padding: 0 10px; font: inherit; }
+#message { min-height: 22px; color: color-mix(in srgb, CanvasText 76%, transparent); line-height: 1.5; }
+@media (max-width: 760px) {
+  main { grid-template-columns: 1fr; }
+  .context { border-right: 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 16%, transparent); padding: 32px 24px; }
+  .context h1 { font-size: 32px; }
+}
+</style>
 </head>
 <body>
 <main>
-<section>
+<section class="context">
 <h1>Protected Publish Site</h1>
-<p>请登录或提交访问申请。</p>
+<p>这里是受保护的发布内容。已有账号可直接登录；新访问者可以提交申请，管理员审核后即可访问。</p>
 </section>
-<section>
-<button id="loginTab" type="button">登录</button>
+<section class="panel-wrap">
+<div class="panel">
+<div class="tabs">
+<button id="loginTab" class="active" type="button">登录</button>
 <button id="registerTab" type="button">注册</button>
+</div>
 <form id="loginForm">
-<input name="username" placeholder="用户名" required>
-<input name="password" placeholder="密码" type="password" required>
+<input name="username" placeholder="用户名" autocomplete="username" required>
+<input name="password" placeholder="密码" type="password" autocomplete="current-password" required>
 <button type="submit">登录</button>
 </form>
 <form id="registerForm" hidden>
-<input name="username" placeholder="用户名" required>
-<input name="password" placeholder="密码" type="password" required>
-<input name="confirmPassword" placeholder="确认密码" type="password" required>
+<input name="username" placeholder="用户名" autocomplete="username" required>
+<input name="password" placeholder="密码" type="password" autocomplete="new-password" required>
+<input name="confirmPassword" placeholder="确认密码" type="password" autocomplete="new-password" required>
 <input name="nickname" placeholder="昵称 / 备注" required>
 <button type="submit">提交申请</button>
 </form>
 <p id="message"></p>
+</div>
 </section>
 </main>
 <script>
 const message = document.getElementById("message");
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
-document.getElementById("loginTab").onclick = () => { loginForm.hidden = false; registerForm.hidden = true; message.textContent = ""; };
-document.getElementById("registerTab").onclick = () => { loginForm.hidden = true; registerForm.hidden = false; message.textContent = ""; };
+const loginTab = document.getElementById("loginTab");
+const registerTab = document.getElementById("registerTab");
+loginTab.onclick = () => { loginForm.hidden = false; registerForm.hidden = true; loginTab.classList.add("active"); registerTab.classList.remove("active"); message.textContent = ""; };
+registerTab.onclick = () => { loginForm.hidden = true; registerForm.hidden = false; registerTab.classList.add("active"); loginTab.classList.remove("active"); message.textContent = ""; };
 async function postJSON(url, data) {
   const response = await fetch(url, { method: "POST", body: JSON.stringify(data) });
   return response.json();
