@@ -30,7 +30,6 @@ import (
 	"github.com/siyuan-note/httpclient"
 	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/conf"
-	"github.com/siyuan-note/siyuan/kernel/task"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
@@ -154,46 +153,6 @@ func DeactivateUser() (err error) {
 	return
 }
 
-var uploadToken = ""
-var uploadTokenTime int64
-
-func LoadUploadToken() (err error) {
-	now := time.Now().Unix()
-	if 3600 >= now-uploadTokenTime {
-		return
-	}
-
-	requestResult := gulu.Ret.NewResult()
-	request := httpclient.NewCloudRequest30s()
-	resp, err := request.
-		SetSuccessResult(requestResult).
-		SetCookies(&http.Cookie{Name: "symphony", Value: Conf.GetUser().UserToken}).
-		Post(util.GetCloudServer() + "/apis/siyuan/upload/token")
-	if err != nil {
-		logging.LogErrorf("get upload token failed: %s", err)
-		return ErrFailedToConnectCloudServer
-	}
-
-	if 401 == resp.StatusCode {
-		err = errors.New(Conf.Language(31))
-		return
-	}
-
-	if 0 != requestResult.Code {
-		logging.LogErrorf("get upload token failed: %s", requestResult.Msg)
-		return
-	}
-
-	resultData := requestResult.Data.(map[string]any)
-	uploadToken = resultData["uploadToken"].(string)
-	uploadTokenTime = now
-	return
-}
-
-var (
-	subscriptionExpirationReminded bool
-)
-
 func RefreshCheckJob2H() {
 }
 
@@ -201,39 +160,6 @@ func RefreshCheckJob6H() {
 }
 
 func refreshSubscriptionExpirationRemind() {
-	return
-
-	if subscriptionExpirationReminded {
-		return
-	}
-	subscriptionExpirationReminded = true
-
-	if "ios" == util.Container {
-		return
-	}
-
-	defer logging.Recover()
-
-	if IsSubscriber() && -1 != Conf.GetUser().UserSiYuanProExpireTime {
-		expired := int64(Conf.GetUser().UserSiYuanProExpireTime)
-		now := time.Now().UnixMilli()
-		if now >= expired { // 已经过期
-			if now-expired <= 1000*60*60*24*2 { // 2 天内提醒 https://github.com/siyuan-note/siyuan/issues/7816
-				task.AppendAsyncTaskWithDelay(task.PushMsg, 30*time.Second, util.PushErrMsg, Conf.Language(128), 0)
-			}
-			return
-		}
-		remains := int((expired - now) / 1000 / 60 / 60 / 24)
-		expireDay := 15 // 付费订阅提前 15 天提醒
-		if 2 == Conf.GetUser().UserSiYuanSubscriptionPlan {
-			expireDay = 3 // 试用订阅提前 3 天提醒
-		}
-
-		if 0 < remains && expireDay > remains {
-			task.AppendAsyncTaskWithDelay(task.PushMsg, 7*time.Second, util.PushErrMsg, fmt.Sprintf(Conf.Language(127), remains), 0)
-			return
-		}
-	}
 }
 
 func refreshUser() {
@@ -246,7 +172,6 @@ func refreshUser() {
 		if nil != Conf.GetUser() {
 			RefreshUser(Conf.GetUser().UserToken)
 		}
-		subscriptionExpirationReminded = false
 	}
 }
 
