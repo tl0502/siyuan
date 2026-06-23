@@ -1,12 +1,13 @@
 FROM --platform=$BUILDPLATFORM node:21 AS node-build
 
 ARG NPM_REGISTRY=
+ENV CI=true
 
 WORKDIR /app
 ADD app/package.json app/pnpm* app/.npmrc .
 
 RUN <<EORUN
-#!/bin/bash -e
+set -e
 corepack enable
 corepack install --global $(node -e 'console.log(require("./package.json").packageManager)')
 npm config set registry ${NPM_REGISTRY}
@@ -15,7 +16,7 @@ EORUN
 
 ADD app/ .
 RUN <<EORUN
-#!/bin/bash -e
+set -e
 pnpm run build
 mkdir /artifacts
 mv appearance stage guide changelogs /artifacts/
@@ -24,7 +25,7 @@ EORUN
 FROM golang:1.25-alpine AS go-build
 
 RUN <<EORUN
-#!/bin/sh -e
+set -e
 apk add --no-cache gcc musl-dev
 go env -w GO111MODULE=on
 go env -w CGO_ENABLED=1
