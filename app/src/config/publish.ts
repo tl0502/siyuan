@@ -1,6 +1,7 @@
 import {fetchPost} from "../util/fetch";
 import {hasClosestByTag} from "../protyle/util/hasClosest";
 import {isMobile} from "../util/functions";
+import {escapeAttr, escapeHtml} from "../util/escape";
 
 export const publish = {
     element: undefined as Element,
@@ -87,6 +88,16 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
     <div class="fn__flex-1" id="publishAuthAccounts">
     </div>
 </div>
+<div class="b3-label">
+    <div class="fn__flex">
+        <div class="fn__flex-1">
+            发布访问账号
+            <div class="b3-label__text">审核注册申请，并管理可登录发布站点的访问账号。</div>
+        </div>
+    </div>
+    <div class="fn__hr"></div>
+    <div id="publishUsers"></div>
+</div>
 `;
     },
     bindEvent: () => {
@@ -110,9 +121,24 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
         });
 
         publish._refreshPublish();
+        publish._refreshPublishUsers();
     },
     _refreshPublish: () => {
         fetchPost("/api/setting/getPublish", {}, publish.updatePublishConfig.bind(null, true));
+    },
+    _refreshPublishUsers: () => {
+        fetchPost("/api/setting/getPublishUsers", {}, (response) => {
+            if (response.code === 0) {
+                publish._renderPublishUsers(response.data.users || []);
+            }
+        });
+    },
+    _publishUserAction: (url: string, data: IObject = {}) => {
+        fetchPost(url, data, (response) => {
+            if (response.code === 0) {
+                publish._refreshPublishUsers();
+            }
+        });
     },
     _savePublish: (reloadAccounts = true) => {
         const publishEnable = publish.element.querySelector<HTMLInputElement>("#publishEnable");
@@ -220,6 +246,76 @@ ${window.siyuan.languages.publishServiceAuthAccounts}
                     togglePassword.previousElementSibling.setAttribute("type", isEye ? "text" : "password");
                 });
             });
+    },
+    _renderPublishUsers: (users: Config.IPublishUser[]) => {
+        const publishUsers = publish.element.querySelector<HTMLDivElement>("#publishUsers");
+        if (users.length === 0) {
+            publishUsers.innerHTML = "<div class=\"b3-label__text\">暂无发布访问账号。</div>";
+            return;
+        }
+
+        const statusLabels: Record<Config.TPublishUserStatus, string> = {
+            pending: "待审核",
+            approved: "已批准",
+            rejected: "已拒绝",
+            disabled: "已禁用",
+        };
+
+        publishUsers.innerHTML = `<div class="fn__flex-column">${
+            users.map((user) => {
+                const username = escapeAttr(user.username);
+                const actions: string[] = [];
+                if (user.status === "pending") {
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="approve" data-username="${username}">批准</button>`);
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="reject" data-username="${username}">拒绝</button>`);
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
+                } else if (user.status === "approved") {
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="resetPassword" data-username="${username}">重置密码</button>`);
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="disable" data-username="${username}">禁用</button>`);
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
+                } else if (user.status === "rejected") {
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="approve" data-username="${username}">批准</button>`);
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
+                } else {
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="approve" data-username="${username}">启用</button>`);
+                    actions.push(`<button class="b3-button b3-button--outline" data-action="delete" data-username="${username}">删除</button>`);
+                }
+
+                const created = user.created ? new Date(user.created).toLocaleString() : "";
+                return `<div class="b3-label b3-label--inner fn__flex" data-username="${username}">
+    <div class="fn__flex-1">
+        <div>${escapeHtml(user.username)}</div>
+        <div class="b3-label__text">${escapeHtml(user.nickname)} · ${statusLabels[user.status]}${created ? ` · ${escapeHtml(created)}` : ""}</div>
+    </div>
+    <span class="fn__space"></span>
+    <div class="fn__flex">${actions.join("<span class=\"fn__space\"></span>")}</div>
+</div>`;
+            }).join("")
+        }</div>`;
+
+        publishUsers.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const username = button.dataset.username;
+                const action = button.dataset.action;
+                if (!username) {
+                    return;
+                }
+                if (action === "approve") {
+                    publish._publishUserAction("/api/setting/approvePublishUser", {username});
+                } else if (action === "reject") {
+                    publish._publishUserAction("/api/setting/rejectPublishUser", {username});
+                } else if (action === "disable") {
+                    publish._publishUserAction("/api/setting/disablePublishUser", {username});
+                } else if (action === "delete") {
+                    publish._publishUserAction("/api/setting/deletePublishUser", {username});
+                } else if (action === "resetPassword") {
+                    const password = window.prompt("请输入新密码");
+                    if (password) {
+                        publish._publishUserAction("/api/setting/resetPublishUserPassword", {username, password});
+                    }
+                }
+            });
+        });
     },
     _renderPublishAddressList: (
         element: Element,

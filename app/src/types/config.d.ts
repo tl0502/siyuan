@@ -1202,6 +1202,16 @@ declare namespace Config {
         memo: string;
     }
 
+    export type TPublishUserStatus = "pending" | "approved" | "rejected" | "disabled";
+
+    export interface IPublishUser {
+        username: string;
+        nickname: string;
+        status: TPublishUserStatus;
+        created: number;
+        updated: number;
+    }
+
     /**
      * Snapshot repository related configuration
      */
