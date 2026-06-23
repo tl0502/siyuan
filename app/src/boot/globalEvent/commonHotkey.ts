@@ -97,7 +97,7 @@ const hasKeymap = (keymap: Record<string, IKeymapItem>, key1: "general" | "edito
 
 export const correctHotkey = (app: App) => {
     if (!["darwin", "ios"].includes(window.siyuan.config.system.os)) {
-        ["fileTree", "outline", "bookmark", "tag", "dailyNote", "inbox", "backlinks",
+        ["fileTree", "outline", "bookmark", "tag", "dailyNote", "backlinks",
             "graphView", "globalGraph", "riffCard"].forEach(key => {
             Constants.SIYUAN_KEYMAP.general[key].custom = Constants.SIYUAN_KEYMAP.general[key].default =
                 Constants.SIYUAN_KEYMAP.general[key].default.replace("⌃", "⌥");

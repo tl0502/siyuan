@@ -222,7 +222,7 @@ export const getAllLayout = () => {
 
 const initInternalDock = (dockItem: Config.IUILayoutDockTab[]) => {
     dockItem.forEach((existSubItem, index) => {
-        if (window.siyuan.isPublish && existSubItem.type === "inbox") {
+		if (existSubItem.type === "inbox") {
             dockItem.splice(index, 1);
             return;
         }
@@ -876,7 +876,7 @@ export const addResize = (obj: Layout | Wnd, after = true) => {
         const previousElement = resizeElement.previousElementSibling as HTMLElement;
         const nextElement = resizeElement.nextElementSibling as HTMLElement;
         if (previousElement && nextElement) {
-            const bigType = ["graph", "inbox", "globalGraph", "backlink"];
+			const bigType = ["graph", "globalGraph", "backlink"];
             let size = 232;
             nextElement.style.transition = "none";
             previousElement.style.transition = "none";

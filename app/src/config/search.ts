@@ -89,8 +89,7 @@ export const initConfigSearch = (element: HTMLElement, app: App) => {
             "twoFactorCaptcha", "account1", "account2", "account5"]),
 
         // 云端
-        getLang(["cloudStorage", "trafficStat", "sync", "backup", "cdn", "total", "sizeLimit", "cloudBackup",
-            "cloudBackupTip", "updatePath", "cloudSync", "upload", "download", "syncMode", "syncModeTip",
+        getLang(["sync", "updatePath", "cloudSync", "syncMode", "syncModeTip",
             "generateConflictDoc", "generateConflictDocTip", "syncProvider", "syncProviderTip",
             "syncMode1", "syncMode2", "reposTip", "openSyncTip1", "openSyncTip2", "cloudSyncDir", "cloudSyncDirTip", "config"]),
 

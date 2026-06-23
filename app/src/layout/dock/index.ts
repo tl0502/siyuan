@@ -11,7 +11,6 @@ import {Graph} from "./Graph";
 import {Model} from "../Model";
 import {adjustLayout, saveLayout, setPanelFocus} from "../util";
 import {getDockByType, resizeTabs} from "../tabUtil";
-import {Inbox} from "./Inbox";
 import {Protyle} from "../../protyle";
 import {Backlink} from "./Backlink";
 import {resetFloatDockSize} from "./util";
@@ -22,7 +21,7 @@ import {Custom} from "./Custom";
 import {clearBeforeResizeTop, recordBeforeResizeTop} from "../../protyle/util/resize";
 import {Constants} from "../../constants";
 
-const TYPES = ["file", "outline", "inbox", "bookmark", "tag", "graph", "globalGraph", "backlink"];
+const TYPES = ["file", "outline", "bookmark", "tag", "graph", "globalGraph", "backlink"];
 
 export class Dock {
     public element: HTMLElement;
@@ -652,13 +651,6 @@ export class Dock {
                                     tab,
                                     blockId: editor?.protyle?.block?.rootID,
                                 }));
-                            }
-                        });
-                        break;
-                    case "inbox":
-                        tab = new Tab({
-                            callback: (tab: Tab) => {
-                                tab.addModel(new Inbox(this.app, tab));
                             }
                         });
                         break;

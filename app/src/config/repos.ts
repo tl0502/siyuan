@@ -5,7 +5,6 @@ import {bindSyncCloudListEvent, getSyncCloudList} from "../sync/syncGuide";
 import {processSync} from "../dialog/processSystem";
 import {getCloudURL} from "./util/about";
 import {openByMobile} from "../protyle/util/compatibility";
-import {confirmDialog} from "../dialog/confirmDialog";
 
 const renderProvider = (provider: number) => {
     if (provider === 0) {
@@ -84,10 +83,6 @@ const renderProvider = (provider: number) => {
 </div>
 <div class="b3-label b3-label--inner fn__flex">
     <div class="fn__flex-1"></div>
-    <button class="b3-button b3-button--outline fn__size200" data-action="purgeData">
-        <svg><use xlink:href="#iconTrashcan"></use></svg>${window.siyuan.languages.cloudStoragePurge}
-    </button>
-    <div class="fn__space"></div>
     <button class="b3-button b3-button--outline fn__size200" style="position: relative">
         <input id="importData" class="b3-form__upload" type="file" data-type="s3">
         <svg><use xlink:href="#iconDownload"></use></svg>${window.siyuan.languages.import}
@@ -143,10 +138,6 @@ const renderProvider = (provider: number) => {
 </div>
 <div class="b3-label b3-label--inner fn__flex">
     <div class="fn__flex-1"></div>
-    <button class="b3-button b3-button--outline fn__size200" data-action="purgeData">
-        <svg><use xlink:href="#iconTrashcan"></use></svg>${window.siyuan.languages.cloudStoragePurge}
-    </button>
-    <div class="fn__space"></div>
     <button class="b3-button b3-button--outline fn__size200" style="position: relative">
         <input id="importData" class="b3-form__upload" type="file" data-type="webdav">
         <svg><use xlink:href="#iconDownload"></use></svg>${window.siyuan.languages.import}
@@ -217,18 +208,6 @@ const fillSyncProviderPanelValues = (panel: Element) => {
     }
 };
 
-const getReposDataLoadingHTML = () => `<div class="fn__flex">
-    <div class="fn__flex-1">
-        ${window.siyuan.languages.cloudStorage}
-    </div>
-    <div class="fn__flex-1">
-        ${window.siyuan.languages.trafficStat}
-    </div>
-</div>
-<div style="min-height: 183px; display: flex; justify-content: center;" id="reposLoading">
-    <img src="/stage/loading-pure.svg">
-</div>`;
-
 const bindProviderEvent = () => {
     const importElement = repos.element.querySelector("#importData") as HTMLInputElement;
     if (importElement) {
@@ -250,17 +229,6 @@ const bindProviderEvent = () => {
         });
     }
 
-    const reposDataElement = repos.element.querySelector("#reposData");
-    let nextElement = reposDataElement.nextElementSibling;
-    while (nextElement) {
-        if (isPaidUser()) {
-            nextElement.classList.remove("fn__none");
-        } else {
-            nextElement.classList.add("fn__none");
-        }
-        nextElement = nextElement.nextElementSibling;
-    }
-    reposDataElement.classList.add("fn__none");
     const providerPanelElement = repos.element.querySelector("#syncProviderPanel");
     fillSyncProviderPanelValues(providerPanelElement);
     providerPanelElement.querySelectorAll(".b3-text-field, .b3-select").forEach(item => {
@@ -398,9 +366,6 @@ export const repos = {
 <div id="syncProviderPanel" class="b3-label">
     ${renderProvider(window.siyuan.config.sync.provider)}
 </div>
-<div id="reposData" class="b3-label">
-    ${getReposDataLoadingHTML()}
-</div>
 <label class="fn__flex b3-label">
     <div class="fn__flex-1">
         ${window.siyuan.languages.openSyncTip1}
@@ -461,10 +426,6 @@ export const repos = {
         </button>
     </div>
     <div id="reposCloudSyncList" class="fn__none b3-label"><img style="margin: 0 auto;display: block;width: 64px;height: 100%" src="/stage/loading-pure.svg"></div>
-</div>
-<div class="b3-label fn__flex">
-    <div class="fn__flex-center">${window.siyuan.languages.cloudBackup}</div>
-    <div class="b3-list-item__meta fn__flex-center">${window.siyuan.languages.cloudBackupTip}</div>
 </div></div>`;
     },
     bindEvent: () => {
@@ -573,11 +534,6 @@ export const repos = {
                 } else if (action === "exportData") {
                     fetchPost(target.getAttribute("data-type") === "s3" ? "/api/sync/exportSyncProviderS3" : "/api/sync/exportSyncProviderWebDAV", {}, response => {
                         openByMobile(response.data.zip);
-                    });
-                    break;
-                } else if (action === "purgeData") {
-                    confirmDialog("♻️ " + window.siyuan.languages.cloudStoragePurge, `<div class="b3-typography">${window.siyuan.languages.cloudStoragePurgeConfirm}</div>`, () => {
-                        fetchPost("/api/repo/purgeCloudRepo");
                     });
                     break;
                 }
