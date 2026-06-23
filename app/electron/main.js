@@ -578,10 +578,9 @@ const initKernel = (workspace, port, lang) => {
             return;
         }
 
-        if (!isDevEnv || workspaces.length > 0) {
-            if (port && "" !== port) {
-                kernelPort = port;
-            } else {
+        if (port && "" !== port) {
+            kernelPort = port;
+        } else if (!isDevEnv || workspaces.length > 0) {
                 const getAvailablePort = () => {
                     // https://gist.github.com/mikeal/1840641
                     return new Promise((portResolve, portReject) => {
@@ -598,7 +597,6 @@ const initKernel = (workspace, port, lang) => {
                     });
                 };
                 await getAvailablePort();
-            }
         }
         writeLog("got kernel port [" + kernelPort + "]");
         if (!kernelPort) {
@@ -613,7 +611,7 @@ const initKernel = (workspace, port, lang) => {
         if (workspace && "" !== workspace) {
             cmds.push("--workspace", workspace);
         }
-        if (port && "" !== port) {
+        if (port && "" !== port && port !== kernelPort) {
             cmds.push("--port", port);
         }
         if (lang && "" !== lang) {

@@ -39,3 +39,8 @@ yarn.lock
 
 # Workflows
 **/__pycache__
+启动.txt
+
+AGENTS.md
+.codex/
+OFFICIAL_FEATURE_AUDIT.md
