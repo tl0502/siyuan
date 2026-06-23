@@ -550,7 +550,6 @@ func TestHandlePublishLoginUsesGenericFailureForPendingUser(t *testing.T) {
 
 func TestHandlePublishLoginCreatesSessionForApprovedUser(t *testing.T) {
 	withPublishAuthTempDataDir(t)
-	model.InitAccounts()
 
 	if _, err := model.RegisterPublishUser("alice", "secret-123", "Alice"); err != nil {
 		t.Fatalf("register failed: %s", err)
