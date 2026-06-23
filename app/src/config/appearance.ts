@@ -136,9 +136,6 @@ export const appearance = {
             ${window.siyuan.languages.codeSnippet}
         </div>
         <span class="fn__space"></span>
-        <a class="b3-button b3-button--outline fn__flex-center fn__size200${"zh_CN" !== window.siyuan.config.lang ? " fn__none" : ""}" target="_blank" href="https://ld246.com/tag/code-snippet">
-            <svg><use xlink:href="#iconUpload"></use></svg>${window.siyuan.languages.visitCommunityShare}
-        </a>
     </div>
     <div class="fn__hr"></div>
     <div class="fn__flex config__item">
