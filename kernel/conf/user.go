@@ -25,29 +25,25 @@ type User struct {
 	UserIntro                       string       `json:"userIntro"`
 	UserNickname                    string       `json:"userNickname"`
 	UserCreateTime                  string       `json:"userCreateTime"`
-	UserSiYuanProExpireTime         float64      `json:"userSiYuanProExpireTime"`
+	UserSiYuanProExpireTime         float64      `json:"userSiYuanProExpireTime"` // official account compatibility field
 	UserToken                       string       `json:"userToken"`
 	UserTokenExpireTime             string       `json:"userTokenExpireTime"`
-	UserSiYuanRepoSize              float64      `json:"userSiYuanRepoSize"`
-	UserSiYuanPointExchangeRepoSize float64      `json:"userSiYuanPointExchangeRepoSize"`
-	UserSiYuanAssetSize             float64      `json:"userSiYuanAssetSize"`
+	UserSiYuanRepoSize              float64      `json:"userSiYuanRepoSize"`              // official account compatibility field
+	UserSiYuanPointExchangeRepoSize float64      `json:"userSiYuanPointExchangeRepoSize"` // official account compatibility field
+	UserSiYuanAssetSize             float64      `json:"userSiYuanAssetSize"`             // official account compatibility field
 	UserTrafficUpload               float64      `json:"userTrafficUpload"`
 	UserTrafficDownload             float64      `json:"userTrafficDownload"`
 	UserTrafficAPIGet               float64      `json:"userTrafficAPIGet"`
 	UserTrafficAPIPut               float64      `json:"userTrafficAPIPut"`
 	UserTrafficTime                 float64      `json:"userTrafficTime"`
-	UserSiYuanSubscriptionPlan      float64      `json:"userSiYuanSubscriptionPlan"`   // -1：未订阅，0：标准订阅，1：教育订阅，2：试用
-	UserSiYuanSubscriptionStatus    float64      `json:"userSiYuanSubscriptionStatus"` // -1：未订阅，0：订阅可用，1：订阅封禁，2：订阅过期
-	UserSiYuanSubscriptionType      float64      `json:"userSiYuanSubscriptionType"`   // 0 年付；1 终生；2 月付
-	UserSiYuanOneTimePayStatus      float64      `json:"userSiYuanOneTimePayStatus"`   // 0 未付费；1 已付费
+	UserSiYuanSubscriptionPlan      float64      `json:"userSiYuanSubscriptionPlan"`   // official account compatibility field
+	UserSiYuanSubscriptionStatus    float64      `json:"userSiYuanSubscriptionStatus"` // official account compatibility field
+	UserSiYuanSubscriptionType      float64      `json:"userSiYuanSubscriptionType"`   // official account compatibility field
+	UserSiYuanOneTimePayStatus      float64      `json:"userSiYuanOneTimePayStatus"`   // official account compatibility field
 }
 
 type UserTitle struct {
 	Name string `json:"name"`
 	Desc string `json:"desc"`
 	Icon string `json:"icon"`
-}
-
-func (user *User) GetCloudRepoAvailableSize() int64 {
-	return int64(user.UserSiYuanRepoSize - user.UserSiYuanAssetSize)
 }

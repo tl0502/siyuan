@@ -105,7 +105,7 @@ declare namespace Config {
          */
         displayTitle: boolean;
         /**
-         * Display the VIP icon
+         * Official account badge display compatibility field
          */
         displayVIP: boolean;
     }

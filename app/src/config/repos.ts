@@ -385,7 +385,7 @@ export const repos = {
         <span class="fn__space"></span>        
         <span class="fn__flex-center ft__on-surface">${window.siyuan.languages.second}</span> 
     </div>
-    <label class="fn__flex b3-label${(window.siyuan.config.sync.mode !== 1 || window.siyuan.config.system.container === "docker" || window.siyuan.config.sync.provider !== 0) ? " fn__none" : ""}">
+    <label class="fn__flex b3-label fn__none">
         <div class="fn__flex-1">
             ${window.siyuan.languages.syncPerception}
             <div class="b3-label__text">${window.siyuan.languages.syncPerceptionTip}</div>
@@ -412,6 +412,11 @@ export const repos = {
         bindProviderEvent();
         const switchElement = repos.element.querySelector("#reposCloudSyncSwitch") as HTMLInputElement;
         switchElement.addEventListener("change", () => {
+            if (window.siyuan.config.sync.provider === 0) {
+                switchElement.checked = false;
+                showMessage(window.siyuan.languages._kernel[29]);
+                return;
+            }
             if (switchElement.checked && window.siyuan.config.sync.cloudName === "") {
                 switchElement.checked = false;
                 showMessage(window.siyuan.languages._kernel[123]);
@@ -453,11 +458,7 @@ export const repos = {
         const syncModeElement = repos.element.querySelector("#syncMode") as HTMLSelectElement;
         syncModeElement.addEventListener("change", () => {
             fetchPost("/api/sync/setSyncMode", {mode: parseInt(syncModeElement.value, 10)}, () => {
-                if (syncModeElement.value === "1" && window.siyuan.config.sync.provider === 0 && window.siyuan.config.system.container !== "docker") {
-                    syncPerceptionElement.parentElement.classList.remove("fn__none");
-                } else {
-                    syncPerceptionElement.parentElement.classList.add("fn__none");
-                }
+                syncPerceptionElement.parentElement.classList.add("fn__none");
                 if (syncModeElement.value === "1") {
                     syncIntervalElement.parentElement.classList.remove("fn__none");
                 } else {
@@ -481,11 +482,7 @@ export const repos = {
                 bindProviderEvent();
                 syncConfigElement.innerHTML = "";
                 syncConfigElement.classList.add("fn__none");
-                if (window.siyuan.config.sync.mode !== 1 || window.siyuan.config.system.container === "docker" || window.siyuan.config.sync.provider !== 0) {
-                    syncPerceptionElement.parentElement.classList.add("fn__none");
-                } else {
-                    syncPerceptionElement.parentElement.classList.remove("fn__none");
-                }
+                syncPerceptionElement.parentElement.classList.add("fn__none");
                 if (window.siyuan.config.sync.mode !== 1) {
                     syncIntervalElement.parentElement.classList.add("fn__none");
                 } else {

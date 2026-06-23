@@ -251,7 +251,7 @@ ${data.shorthandContent}
         const loadingElement = this.element.querySelector(".fn__loading");
         this.element.lastElementChild.innerHTML = `<ul class="b3-list b3-list--background">
     <li class="b3-list--empty">
-        ${window.siyuan.languages.inboxTip}
+        ${window.siyuan.languages._kernel[29] || "Official service is disabled in this fork."}
     </li>
 </ul>`;
         loadingElement.classList.add("fn__none");

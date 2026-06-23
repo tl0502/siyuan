@@ -19,10 +19,8 @@ package model
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -385,6 +383,13 @@ func SetSyncGenerateConflictDoc(b bool) {
 }
 
 func SetSyncEnable(b bool) {
+	if b && conf.ProviderSiYuan == Conf.Sync.Provider {
+		Conf.Sync.Enabled = false
+		Conf.Save()
+		util.PushErrMsg(ErrOfficialServiceDisabled.Error(), 5000)
+		return
+	}
+
 	Conf.Sync.Enabled = b
 	Conf.Save()
 }
@@ -403,6 +408,11 @@ func SetSyncInterval(interval int) {
 }
 
 func SetSyncPerception(enabled bool) {
+	if enabled && conf.ProviderSiYuan == Conf.Sync.Provider {
+		enabled = false
+		util.PushErrMsg(ErrOfficialServiceDisabled.Error(), 5000)
+	}
+
 	if util.ContainerDocker == util.Container {
 		enabled = false
 	}
@@ -731,7 +741,10 @@ func isProviderOnline(byHand bool) (ret bool) {
 	skipTlsVerify := false
 	switch Conf.Sync.Provider {
 	case conf.ProviderSiYuan:
-		checkURL = util.GetCloudSyncServer()
+		if byHand {
+			util.PushErrMsg(ErrOfficialServiceDisabled.Error(), 5000)
+		}
+		return false
 	case conf.ProviderS3:
 		checkURL = Conf.Sync.S3.Endpoint
 		skipTlsVerify = Conf.Sync.S3.SkipTlsVerify
@@ -814,21 +827,3 @@ func connectSyncWebSocket() {
 }
 
 var KernelID = gulu.Rand.String(7)
-
-func dialSyncWebSocket() (c *websocket.Conn, err error) {
-	endpoint := util.GetCloudWebSocketServer() + "/apis/siyuan/dejavu/ws"
-	header := http.Header{
-		"User-Agent":        []string{util.UserAgent},
-		"x-siyuan-uid":      []string{Conf.GetUser().UserId},
-		"x-siyuan-kernel":   []string{KernelID},
-		"x-siyuan-ver":      []string{util.Ver},
-		"x-siyuan-os":       []string{runtime.GOOS},
-		"x-siyuan-hostname": []string{util.GetDeviceName()},
-		"x-siyuan-repo":     []string{Conf.Sync.CloudName},
-	}
-	c, _, err = websocket.DefaultDialer.Dial(endpoint, header)
-	if err == nil {
-		closedSyncWebSocket.Store(false)
-	}
-	return
-}

@@ -243,8 +243,6 @@ func InitConf() {
 		Conf.FileTree.RecentDocsMaxListCount = conf.MaxFileTreeRecentDocsListCount
 	}
 
-	util.CurrentCloudRegion = Conf.CloudRegion
-
 	if nil == Conf.Tag {
 		Conf.Tag = conf.NewTag()
 	}
@@ -744,8 +742,7 @@ func Close(force, setCurrentWorkspace bool, execInstallPkg int) (exitCode int) {
 	FlushTxQueue()
 
 	if !force {
-		if Conf.Sync.Enabled && 3 != Conf.Sync.Mode &&
-			((IsSubscriber() && conf.ProviderSiYuan == Conf.Sync.Provider) || conf.ProviderSiYuan != Conf.Sync.Provider) {
+		if Conf.Sync.Enabled && 3 != Conf.Sync.Mode && conf.ProviderSiYuan != Conf.Sync.Provider {
 			syncData(true, false)
 			if 0 != ExitSyncSucc {
 				exitCode = 1
@@ -985,7 +982,7 @@ func (conf *AppConf) GetClosedBoxes() (ret []*Box) {
 
 func (conf *AppConf) Language(num int) (ret string) {
 	ret = conf.language(num)
-	ret = strings.ReplaceAll(ret, "${accountServer}", util.GetCloudAccountServer())
+	ret = strings.ReplaceAll(ret, "${accountServer}", "#official-service-disabled")
 	return
 }
 
@@ -1010,11 +1007,6 @@ func InitBoxes() {
 	}
 
 	logging.LogInfof("tree/block count [%d/%d]", treenode.CountTrees(), blockCount)
-}
-
-func IsSubscriber() bool {
-	u := Conf.GetUser()
-	return nil != u && (-1 == u.UserSiYuanProExpireTime || 0 < u.UserSiYuanProExpireTime) && 0 == u.UserSiYuanSubscriptionStatus
 }
 
 const (

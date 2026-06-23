@@ -174,7 +174,7 @@ func extensionCopy(c *gin.Context) {
 	var withMath bool
 
 	if clippingSym {
-		resp, err := httpclient.NewCloudRequest30s().Get(symArticleHref)
+		resp, err := httpclient.NewBrowserRequest().Get(symArticleHref)
 		if err != nil {
 			logging.LogWarnf("get [%s] failed: %s", symArticleHref, err)
 		} else {

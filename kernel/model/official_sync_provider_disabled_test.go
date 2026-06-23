@@ -46,6 +46,24 @@ func TestOfficialSyncProviderSelectionDisabled(t *testing.T) {
 	})
 }
 
+func TestOfficialSyncProviderCannotBeEnabled(t *testing.T) {
+	withSyncProvider(t, conf.ProviderSiYuan, false, func() {
+		SetSyncEnable(true)
+		if Conf.Sync.Enabled {
+			t.Fatal("SetSyncEnable(true) enabled sync with ProviderSiYuan, want disabled")
+		}
+	})
+}
+
+func TestOfficialSyncPerceptionCannotBeEnabled(t *testing.T) {
+	withSyncProvider(t, conf.ProviderSiYuan, false, func() {
+		SetSyncPerception(true)
+		if Conf.Sync.Perception {
+			t.Fatal("SetSyncPerception(true) enabled perception with ProviderSiYuan, want disabled")
+		}
+	})
+}
+
 func TestOfficialSyncProviderOperationsDisabled(t *testing.T) {
 	withSyncProvider(t, conf.ProviderSiYuan, true, func() {
 		if checkSync(false, false, true) {
@@ -66,6 +84,16 @@ func TestOfficialSyncProviderOperationsDisabled(t *testing.T) {
 		}
 		if _, err := newRepository(); !errors.Is(err, ErrOfficialServiceDisabled) {
 			t.Fatalf("newRepository() error = %v, want ErrOfficialServiceDisabled", err)
+		}
+	})
+}
+
+func TestOfficialSyncPerceptionDoesNotConnect(t *testing.T) {
+	withSyncProvider(t, conf.ProviderLocal, true, func() {
+		Conf.Sync.Perception = true
+		connectSyncWebSocket()
+		if webSocketConn != nil {
+			t.Fatal("connectSyncWebSocket() created a websocket, want nil")
 		}
 	})
 }

@@ -48,18 +48,6 @@ func RefreshCheckJob2H() {
 func RefreshCheckJob6H() {
 }
 
-func refreshSubscriptionExpirationRemind() {
-}
-
-func refreshUser() {
-}
-
-func refreshCheckDownloadInstallPkg() {
-}
-
-func refreshAnnouncement() {
-}
-
 func RefreshUser(token string) {
 	if "" != token || nil != Conf.GetUser() || "" == Conf.UserData {
 		return

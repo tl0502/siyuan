@@ -29,28 +29,11 @@ import (
 )
 
 var (
-	bazaarMemMu        sync.RWMutex
-	bazaarCacheRhyHash string                          // bazaar hash，发生变更时清空以下缓存
-	stageIndexCache    = make(map[string]*StageIndex)  // pkgType -> 集市包索引
-	bazaarStatsCache   = make(map[string]*bazaarStats) // 集市统计数据
-	installSizeCache   = make(map[string]int64)        // repoURL -> 安装大小
+	bazaarMemMu      sync.RWMutex
+	stageIndexCache  = make(map[string]*StageIndex)  // pkgType -> 集市包索引
+	bazaarStatsCache = make(map[string]*bazaarStats) // 集市统计数据
+	installSizeCache = make(map[string]int64)        // repoURL -> 安装大小
 )
-
-func applyRhyBazaarHash(ctx context.Context) {
-	bazaarHash := util.GetRhyBazaarHash(ctx)
-	if "" == bazaarHash {
-		return
-	}
-	bazaarMemMu.Lock()
-	defer bazaarMemMu.Unlock()
-	if bazaarCacheRhyHash != "" && bazaarHash != bazaarCacheRhyHash {
-		clear(stageIndexCache)
-		clear(bazaarStatsCache)
-		clear(installSizeCache)
-		logging.LogInfof("rhy bazaar hash changed, clearing bazaar caches")
-	}
-	bazaarCacheRhyHash = bazaarHash
-}
 
 type StageBazaarResult struct {
 	StageIndex  *StageIndex             // stage 索引
@@ -80,7 +63,7 @@ func getStageAndBazaar(pkgType string) (result StageBazaarResult) {
 func getStageAndBazaar0(pkgType string) (result StageBazaarResult) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	stageIndex := getStageIndexFromCache(ctx, pkgType)
+	stageIndex := getStageIndexFromCache(pkgType)
 	statsMap := getBazaarStatsFromCache(ctx)
 	if nil != stageIndex && nil != statsMap {
 		// 两者都从缓存返回，不需要 online 检查
@@ -148,9 +131,8 @@ func isBazaarOnline0() (ret bool) {
 	return
 }
 
-// getStageIndexFromCache 仅从缓存获取 stage 索引，无缓存时返回 nil（读前根据 util 已同步的 bazaar hash 视情况清理缓存）
-func getStageIndexFromCache(ctx context.Context, pkgType string) *StageIndex {
-	applyRhyBazaarHash(ctx)
+// getStageIndexFromCache 仅从缓存获取 stage 索引，无缓存时返回 nil。
+func getStageIndexFromCache(pkgType string) *StageIndex {
 	bazaarMemMu.RLock()
 	defer bazaarMemMu.RUnlock()
 	return stageIndexCache[pkgType]
@@ -158,20 +140,14 @@ func getStageIndexFromCache(ctx context.Context, pkgType string) *StageIndex {
 
 // getStageIndex 获取 stage 索引
 func getStageIndex(ctx context.Context, pkgType string) (ret *StageIndex, err error) {
-	if cached := getStageIndexFromCache(ctx, pkgType); nil != cached {
+	if cached := getStageIndexFromCache(pkgType); nil != cached {
 		ret = cached
 		return
 	}
 
-	bazaarHash := util.GetRhyBazaarHash(ctx)
-	if "" == bazaarHash {
-		logging.LogErrorf("bazaar hash unavailable (rhy missing or invalid bazaar field)")
-		err = errors.New("bazaar hash not available")
-		return
-	}
 	ret = &StageIndex{}
 	request := httpclient.NewBrowserRequest()
-	u := util.BazaarOSSServer + "/bazaar@" + bazaarHash + "/stage/" + pkgType + ".json" // pkgType 单词为复数形式
+	u := bazaarStageIndexURL(pkgType)
 	resp, reqErr := request.SetContext(ctx).SetSuccessResult(ret).Get(u)
 	if nil != reqErr {
 		logging.LogErrorf("get community stage index [%s] failed: %s", u, reqErr)
@@ -188,6 +164,10 @@ func getStageIndex(ctx context.Context, pkgType string) (ret *StageIndex, err er
 	stageIndexCache[pkgType] = ret
 	bazaarMemMu.Unlock()
 	return
+}
+
+func bazaarStageIndexURL(pkgType string) string {
+	return util.BazaarStageServer + "/stage/" + pkgType + ".json"
 }
 
 // getStageRepoByURL 根据 pkgType 与 url（owner/repo@hash）获取 StageRepo
@@ -212,7 +192,6 @@ type bazaarStats struct {
 
 // getBazaarStatsFromCache 仅从缓存获取集市包统计信息，无缓存时返回 nil
 func getBazaarStatsFromCache(ctx context.Context) (ret map[string]*bazaarStats) {
-	applyRhyBazaarHash(ctx)
 	bazaarMemMu.RLock()
 	defer bazaarMemMu.RUnlock()
 	if 0 == len(bazaarStatsCache) {

@@ -906,14 +906,6 @@ func DownloadCloudSnapshot(tag, id string) (err error) {
 		return
 	}
 
-	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan:
-		if !IsSubscriber() {
-			util.PushErrMsg(Conf.Language(29), 5000)
-			return
-		}
-	}
-
 	defer util.PushClearProgress()
 
 	var downloadFileCount, downloadChunkCount int
@@ -941,14 +933,6 @@ func UploadCloudSnapshot(tag, id string) (err error) {
 	repo, err := newRepository()
 	if err != nil {
 		return
-	}
-
-	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan:
-		if !IsSubscriber() {
-			util.PushErrMsg(Conf.Language(29), 5000)
-			return
-		}
 	}
 
 	util.PushEndlessProgress(Conf.Language(116))
@@ -979,14 +963,6 @@ func RemoveCloudRepoTag(tag string) (err error) {
 		return
 	}
 
-	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan:
-		if !IsSubscriber() {
-			util.PushErrMsg(Conf.Language(29), 5000)
-			return
-		}
-	}
-
 	err = repo.RemoveCloudRepoTag(tag)
 	if err != nil {
 		return
@@ -1004,14 +980,6 @@ func GetCloudRepoTagSnapshots() (ret []*dejavu.Log, err error) {
 	repo, err := newRepository()
 	if err != nil {
 		return
-	}
-
-	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan:
-		if !IsSubscriber() {
-			util.PushErrMsg(Conf.Language(29), 5000)
-			return
-		}
 	}
 
 	logs, err := repo.GetCloudRepoTagLogs(map[string]any{eventbus.CtxPushMsg: eventbus.CtxPushMsgToStatusBar})
@@ -1035,14 +1003,6 @@ func GetCloudRepoSnapshots(page int) (ret []*dejavu.Log, pageCount, totalCount i
 	repo, err := newRepository()
 	if err != nil {
 		return
-	}
-
-	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan:
-		if !IsSubscriber() {
-			util.PushErrMsg(Conf.Language(29), 5000)
-			return
-		}
 	}
 
 	if 1 > page {
@@ -2203,31 +2163,25 @@ func subscribeRepoEvents() {
 }
 
 func buildCloudConf() (ret *cloud.Conf, err error) {
+	if conf.ProviderSiYuan == Conf.Sync.Provider {
+		err = ErrOfficialServiceDisabled
+		return
+	}
+
 	if !cloud.IsValidCloudDirName(Conf.Sync.CloudName) {
 		logging.LogWarnf("invalid cloud repo name, rename it to [main]")
 		Conf.Sync.CloudName = "main"
 		Conf.Save()
 	}
 
-	userId, token, availableSize := "0", "", int64(1024*1024*1024*1024*2)
-	if nil != Conf.User && conf.ProviderSiYuan == Conf.Sync.Provider {
-		u := Conf.GetUser()
-		userId = u.UserId
-		token = u.UserToken
-		availableSize = u.GetCloudRepoAvailableSize()
-	}
-
 	ret = &cloud.Conf{
 		Dir:           Conf.Sync.CloudName,
-		UserID:        userId,
-		Token:         token,
-		AvailableSize: availableSize,
-		Server:        util.GetCloudServer(),
+		UserID:        "0",
+		Token:         "",
+		AvailableSize: int64(1024 * 1024 * 1024 * 1024 * 2),
 	}
 
 	switch Conf.Sync.Provider {
-	case conf.ProviderSiYuan:
-		ret.Endpoint = util.GetCloudSyncServer()
 	case conf.ProviderS3:
 		ret.S3 = &cloud.ConfS3{
 			Endpoint:       Conf.Sync.S3.Endpoint,
